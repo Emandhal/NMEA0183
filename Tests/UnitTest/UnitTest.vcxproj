@@ -172,6 +172,7 @@
     </ClCompile>
     <ClCompile Include="UnitTest_Functions.cpp" />
     <ClCompile Include="UnitTest_GPSsentences.cpp" />
+    <ClCompile Include="UnitTest_OtherSentences.cpp" />
   </ItemGroup>
   <ItemGroup>
     <ClInclude Include="..\..\ErrorsDef.h" />

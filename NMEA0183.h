@@ -221,11 +221,11 @@ typedef struct NMEA0183_GGAdata
  */
 typedef struct NMEA0183_GLLdata
 {
-    NMEA0183_Coordinate Latitude;  //!< Latitude extracted
-    NMEA0183_Coordinate Longitude; //!< Longitude extracted
-    NMEA0183_Time Time;            //!< Time extracted
-    char Status;                   //!< Status of the frame: 'A' = valid ; 'V' = void = warning
-    char FAAmode;                  //!< FAA mode indicator (NMEA 3.0 and later): ' ' = Not specified in the frame ; 'A' = Autonomous mode ; 'D' = Differential Mode ; 'E' = Estimated (dead-reckoning) mode ; 'M' = Manual Input Mode ; 'S' = Simulated Mode ; 'N' = Data Not Valid
+  NMEA0183_Coordinate Latitude;  //!< Latitude extracted
+  NMEA0183_Coordinate Longitude; //!< Longitude extracted
+  NMEA0183_Time Time;            //!< Time extracted
+  char Status;                   //!< Status of the frame: 'A' = valid ; 'V' = void = warning
+  char FAAmode;                  //!< FAA mode indicator (NMEA 3.0 and later): ' ' = Not specified in the frame ; 'A' = Autonomous mode ; 'D' = Differential Mode ; 'E' = Estimated (dead-reckoning) mode ; 'M' = Manual Input Mode ; 'S' = Simulated Mode ; 'N' = Data Not Valid
 } NMEA0183_GLLdata;
 
 //-----------------------------------------------------------------------------
