@@ -118,6 +118,9 @@ NMEA0183_PACKENUM(eNMEA0183_TalkerID, uint16_t)
 //! Talker ID enumerator
 NMEA0183_PACKENUM(eNMEA0183_SentencesID, uint32_t)
 {
+#ifdef NMEA0183_DECODE_AAM
+  NMEA0183_AAM = NMEA0183_SENTENCE_ID('A', 'A', 'M'), //!< Waypoint Arrival Alarm
+#endif
 #ifdef NMEA0183_DECODE_GGA
   NMEA0183_GGA = NMEA0183_SENTENCE_ID('G', 'G', 'A'), //!< Global positioning system fixed data
 #endif
@@ -194,6 +197,22 @@ typedef struct NMEA0183_SatelliteView
 } NMEA0183_SatelliteView;
 
 //*****************************************************************************
+
+#define NMEA0183_AAM_WAYPOINT_ID_MAX_SIZE  ( 25 ) //! ASCII characters + 0 terminal
+
+/*! @brief AAM (Waypoint Arrival Alarm) sentence fields extraction structure
+ * Format: $--AAM,<Entered:A/V>,<Waypoint:A/V>,<Circle:r.rr[r][r]>,N,<WaypointID>*<CheckSum>
+ * Status of arrival (entering the arrival circle, or pass the perpendicular of the course line) at waypoint
+ */
+typedef struct NMEA0183_AAMdata
+{
+  char ArrivalStatus;    //!< Status of arrival: 'A' = arrival circle entered ; 'V' = arrival circle not entered
+  char PassedWaypoint;   //!< Status of the passed waypoint: 'A' = arrival circle entered ; 'V' = arrival circle not entered
+  uint32_t CircleRadius; //!< Arrival circle radius in nautical miles (divide by 10^4 to get the circle radius in nautical miles)
+  char WaypointID[NMEA0183_AAM_WAYPOINT_ID_MAX_SIZE]; //!< Waypoint ID
+} NMEA0183_AAMdata;
+
+//-----------------------------------------------------------------------------
 
 /*! @brief GGA (Global positioning system fixed data) sentence fields extraction structure
  * Format: $--GGA,<hhmmss.zzz>,<Latitude:ddmm.mmmm[m][m][m]>,<N/S>,<Longitude:dddmm.mmmm[m][m][m]>,<E/W>,<GPSquality:0/1/2/3/4/5/6/7/8>,<SatUsed:ss>,<HDOP:h.h(h)>,<Altitude:(-)aaa.a[a]>,M,<GeoidSep:(-)gg.g[g]>,M,<AgeDiff:cc.c[c]>,<DiffRef:rrrr>*<CheckSum>
@@ -349,6 +368,9 @@ typedef struct NMEA0183_DecodedData
   bool ParseIsValid;                //!< 'true' to indicate that the parsing of the frame is valid else 'false'
   union
   {
+#ifdef NMEA0183_DECODE_AAM
+    NMEA0183_AAMdata AAM;                   //!< AAM (Waypoint Arrival Alarm) extracted. Use if 'SentenceID' = NMEA0183_AAM
+#endif
 #ifdef NMEA0183_DECODE_GGA
     NMEA0183_GGAdata GGA;                   //!< GGA (Global positioning system fixed data) extracted. Use if 'SentenceID' = NMEA0183_GGA
 #endif

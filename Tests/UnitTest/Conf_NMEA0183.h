@@ -61,6 +61,7 @@
 //=============================================================================
 // Others sentences
 //=============================================================================
+#define NMEA0183_DECODE_AAM
 #define NMEA0183_DECODE_TXT
 #define NMEA0183_DECODE_VTG
 #define NMEA0183_DECODE_ZDA

@@ -299,6 +299,47 @@ bool __NMEA0183_ExtractTime(char** pStr, NMEA0183_Time* pData)
 
 
 //**********************************************************************************************************************************************************
+#ifdef NMEA0183_DECODE_AAM
+//=============================================================================
+// Process the AAM (Waypoint Arrival Alarm) sentence
+//=============================================================================
+static eERRORRESULT NMEA0183_ProcessAAM(const char* pSentence, NMEA0183_AAMdata* pData)
+{ // Format: $--AAM,<Entered:A/V>,<Waypoint:A/V>,<Circle:r.rr[r][r]>,N,<WaypointID>*<CheckSum>
+  char* pStr = (char*)pSentence;
+  eERRORRESULT Error = ERR_OK;
+
+  //--- Get Status ---
+  pData->ArrivalStatus = *pStr;                                        //*** Get status of arrival: 'A' = arrival circle entered ; 'V' = arrival circle not entered
+  ++pStr;                                                              // Parsing: Skip <A/V>
+  NMEA0183_CHECK_FIELD_DELIMITER;
+  pData->PassedWaypoint = *pStr;                                       //*** Get status of the passed waypoint: 'A' = arrival circle entered ; 'V' = arrival circle not entered
+  ++pStr;                                                              // Parsing: Skip <A/V>
+  NMEA0183_CHECK_FIELD_DELIMITER;
+
+  //--- Get Arrival circle radius ---
+  pData->CircleRadius = (uint32_t)__NMEA0183_StringToInt(&pStr, 0, 4); //*** Get and save Arrival circle radius <Circle:r.rr[r][r]> (divide by 10^4 to get the circle radius in nautical miles)
+  NMEA0183_CHECK_FIELD_DELIMITER;
+  if (*pStr != 'N') return ERR__PARSE_ERROR;                           // Parsing: Should be 'N'
+  ++pStr;                                                              // Parsing: Skip 'N'
+  NMEA0183_CHECK_FIELD_DELIMITER;
+
+  //--- Get text of the message ---
+  size_t TxtPos = 0;
+  while (TxtPos < (NMEA0183_AAM_WAYPOINT_ID_MAX_SIZE-1))
+  {
+    if ((*pStr == '\0') || (*pStr == NMEA0183_CHECKSUM_DELIMITER)) break;
+    pData->WaypointID[TxtPos] = *pStr;                                 //*** Get char
+    ++TxtPos;
+    ++pStr;
+  }
+  pData->WaypointID[TxtPos] = '\0';
+  if (*pStr != NMEA0183_CHECKSUM_DELIMITER) Error = ERR__PARSE_ERROR;  // Should be a '*'
+  return Error;
+}
+#endif
+
+
+
 #ifdef NMEA0183_DECODE_GGA
 //=============================================================================
 // Process the GGA (Global positioning system fixed data) sentence
@@ -718,6 +759,9 @@ eERRORRESULT NMEA0183_ProcessFrame(NMEA0183_DecodeInput* pDecoder, NMEA0183_Deco
   //--- Parse sentence ---
   switch (pData->SentenceID)
   {
+#ifdef NMEA0183_DECODE_AAM
+    case NMEA0183_AAM: Error = NMEA0183_ProcessAAM(pRaw, &pData->AAM); break;
+#endif
 #ifdef NMEA0183_DECODE_GGA
     case NMEA0183_GGA: Error = NMEA0183_ProcessGGA(pRaw, &pData->GGA); break;
 #endif
