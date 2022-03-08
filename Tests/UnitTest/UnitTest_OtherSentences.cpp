@@ -25,52 +25,6 @@ namespace NMEA0183test
     {
     public:
 
-#ifdef NMEA0183_DECODE_AAM
-        TEST_METHOD(TestMethod_AAM)
-        {
-            NMEA0183decoder NMEA;
-            NMEA0183_DecodedData FrameData;
-            eNMEA0183_State CurrentState;
-            eERRORRESULT LastError = ERR_OK;
-
-            //=== Test (Low Data) ============================================
-            const char* const TEST_GGA_LOW_DATA_FRAME = "$GPAAM,V,V,0.2,N,*14\r\n";
-            for (size_t z = 0; z < strlen(TEST_GGA_LOW_DATA_FRAME); ++z) (void)NMEA.AddReceivedCharacter(TEST_GGA_LOW_DATA_FRAME[z]);
-            CurrentState = NMEA.GetDecoderState();
-            Assert::AreEqual(NMEA0183_TO_PROCESS, CurrentState, L"Test (Low Data), state should be NMEA0183_TO_PROCESS");
-            LastError = NMEA.ProcessFrame(&FrameData);
-            Assert::AreEqual(ERR_OK, LastError, L"Test (Low Data), error should be ERR_OK");
-            CurrentState = NMEA.GetDecoderState();
-            Assert::AreEqual(NMEA0183_WAIT_START, CurrentState, L"Test (Low Data), state should be NMEA0183_WAIT_START");
-            //--- Test data ---
-            Assert::AreEqual(true, FrameData.ParseIsValid, L"Test (Low Data), ParseIsValid should be true");
-            Assert::AreEqual(NMEA0183_GP, FrameData.TalkerID, L"Test (Low Data), TalkerID should be NMEA0183_GP");
-            Assert::AreEqual(NMEA0183_AAM, FrameData.SentenceID, L"Test (Low Data), SentenceID should be NMEA0183_AAM");
-            Assert::AreEqual('V', FrameData.AAM.ArrivalStatus, L"Test (Low Data), ArrivalStatus should be 'V'");
-            Assert::AreEqual('V', FrameData.AAM.PassedWaypoint, L"Test (Low Data), PassedWaypoint should be 'V'");
-            Assert::AreEqual(2000u, FrameData.AAM.CircleRadius, L"Test (Low Data), CircleRadius should be 2000");
-            Assert::AreEqual(0, strncmp("", &FrameData.AAM.WaypointID[0], strlen(FrameData.TXT.TextMessage)), L"Test (Full Data), WaypointID should be '\0'");
-
-            //=== Test (Full Data) ===========================================
-            const char* const TEST_AAM_FULL_DATA_FRAME = "$GPAAM,A,A,0.10,N,WPTNME*32\r\n";
-            for (size_t z = 0; z < strlen(TEST_AAM_FULL_DATA_FRAME); ++z) (void)NMEA.AddReceivedCharacter(TEST_AAM_FULL_DATA_FRAME[z]);
-            CurrentState = NMEA.GetDecoderState();
-            Assert::AreEqual(NMEA0183_TO_PROCESS, CurrentState, L"Test (Full Data), state should be NMEA0183_TO_PROCESS");
-            LastError = NMEA.ProcessFrame(&FrameData);
-            Assert::AreEqual(ERR_OK, LastError, L"Test (Full Data), error should be ERR_OK");
-            CurrentState = NMEA.GetDecoderState();
-            Assert::AreEqual(NMEA0183_WAIT_START, CurrentState, L"Test (Full Data), state should be NMEA0183_WAIT_START");
-            //--- Test data ---
-            Assert::AreEqual(true, FrameData.ParseIsValid, L"Test (Full Data), ParseIsValid should be true");
-            Assert::AreEqual(NMEA0183_GP, FrameData.TalkerID, L"Test (Full Data), TalkerID should be NMEA0183_GP");
-            Assert::AreEqual(NMEA0183_AAM, FrameData.SentenceID, L"Test (Full Data), SentenceID should be NMEA0183_AAM");
-            Assert::AreEqual('A', FrameData.AAM.ArrivalStatus, L"Test (Full Data), ArrivalStatus should be 'A'");
-            Assert::AreEqual('A', FrameData.AAM.PassedWaypoint, L"Test (Full Data), PassedWaypoint should be 'A'");
-            Assert::AreEqual(1000u, FrameData.AAM.CircleRadius, L"Test (Full Data), CircleRadius should be 1000");
-            Assert::AreEqual(0, strncmp("WPTNME", &FrameData.AAM.WaypointID[0], strlen(FrameData.TXT.TextMessage)), L"Test (Full Data), WaypointID should be 'WPTNME'");
-        }
-#endif
-
 #ifdef NMEA0183_DECODE_TXT
         TEST_METHOD(TestMethod_TXT)
         {
@@ -96,35 +50,6 @@ namespace NMEA0183test
             Assert::AreEqual((uint8_t)1u, FrameData.TXT.SentenceNumber, L"Test (Full Data), SentenceNumber should be 1");
             Assert::AreEqual((uint8_t)25u, FrameData.TXT.TextIdentifier, L"Test (Full Data), TextIdentifier should be 25");
             Assert::AreEqual(0, strncmp("DR MODE - ANTENNA FAULT!", &FrameData.TXT.TextMessage[0], strlen(FrameData.TXT.TextMessage)), L"Test (Full Data), TextMessage should be 'DR MODE - ANTENNA FAULT!'");
-        }
-#endif
-
-#ifdef NMEA0183_DECODE_VTG
-        TEST_METHOD(TestMethod_VTG)
-        {
-            NMEA0183decoder NMEA;
-            NMEA0183_DecodedData FrameData;
-            eNMEA0183_State CurrentState;
-            eERRORRESULT LastError = ERR_OK;
-
-            //=== Test (Full Data) ============================================
-            const char* const TEST_VTG_FULL_DATA_FRAME = "$GPVTG,220.86,T,,M,2.550,N,4.724,K,A*34\r\n";
-            for (size_t z = 0; z < strlen(TEST_VTG_FULL_DATA_FRAME); ++z) (void)NMEA.AddReceivedCharacter(TEST_VTG_FULL_DATA_FRAME[z]);
-            CurrentState = NMEA.GetDecoderState();
-            Assert::AreEqual(NMEA0183_TO_PROCESS, CurrentState, L"Test (Full Data), state should be NMEA0183_TO_PROCESS");
-            LastError = NMEA.ProcessFrame(&FrameData);
-            Assert::AreEqual(ERR_OK, LastError, L"Test (Full Data), error should be ERR_OK");
-            CurrentState = NMEA.GetDecoderState();
-            Assert::AreEqual(NMEA0183_WAIT_START, CurrentState, L"Test (Full Data), state should be NMEA0183_WAIT_START");
-            //--- Test data ---
-            Assert::AreEqual(true, FrameData.ParseIsValid, L"Test (Full Data), ParseIsValid should be true");
-            Assert::AreEqual(NMEA0183_GP, FrameData.TalkerID, L"Test (Full Data), TalkerID should be NMEA0183_GP");
-            Assert::AreEqual(NMEA0183_VTG, FrameData.SentenceID, L"Test (Full Data), SentenceID should be NMEA0183_VTG");
-            Assert::AreEqual((uint32_t)2208600u, FrameData.VTG.CourseTrue, L"Test (Full Data), CourseTrue should be 2208600");
-            Assert::AreEqual((uint32_t)0xFFFFFFFF, FrameData.VTG.CourseMagnetic, L"Test (Full Data), CourseMagnetic should be 0xFFFFFFFF");
-            Assert::AreEqual((uint32_t)25500u, FrameData.VTG.SpeedKnots, L"Test (Full Data), SpeedKnots should be 25500");
-            Assert::AreEqual((uint32_t)47240u, FrameData.VTG.SpeedKmHr, L"Test (Full Data), SpeedKmHr should be 47240");
-            Assert::AreEqual('A', FrameData.VTG.FAAmode, L"Test (Full Data), FAAmode should be 'A'");
         }
 #endif
 
