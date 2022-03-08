@@ -38,11 +38,11 @@ static int32_t __NMEA0183_StringToInt(char** pStr, size_t max, size_t digits);
 //-----------------------------------------------------------------------------
 /*! @brief Hex string to value
  * This function will stop parsing at first char not in '0'..'9', 'a'..'f', 'A'..'F'
- * @param[in] *pStr Is the string to parse
- * @param[in] charCount Is the Hex char count to extract
+ *  @param[in/out] **pStr Is the string to parse (the original pointer will be advanced) and returns the new position in the string, the field separator ',' or the end of the string
+ * @param[in] max Is the max count of digit to extract. Set to 0 if no limit wanted. If >20 then it is the stop character
  * @return Returns the value extracted
  */
-static uint32_t __NMEA0183_HexStringToUint(const char* pStr, size_t charCount);
+static uint32_t __NMEA0183_HexStringToUint(char** pStr, size_t max);
 //-----------------------------------------------------------------------------
 /*! @brief Extract coordinate from string
  * This function will stop parsing at first parsing error
@@ -171,7 +171,7 @@ int32_t __NMEA0183_StringToInt(char** pStr, size_t max, size_t digits)
   bool PointFound = false;
   while (CharCount > 0)
   {
-    if (**pStr == max) break;                      // Stop char found
+    if (**pStr == (char)max) break;                // Stop char found
     if (**pStr != '.')
     {
       if ((uint_fast8_t)(**pStr - '0') > 9) break; // If pStr[0] = '\0' or other char, the result should be > 9 then break the while...
@@ -201,15 +201,18 @@ int32_t __NMEA0183_StringToInt(char** pStr, size_t max, size_t digits)
 //=============================================================================
 // [STATIC] Hex string to value
 //=============================================================================
-uint32_t __NMEA0183_HexStringToUint(const char* pStr, size_t charCount)
+uint32_t __NMEA0183_HexStringToUint(char** pStr, size_t max)
 {
-  char* pChar = (char*)pStr;
+  if (**pStr == '\0') return NMEA0183_NO_VALUE;                     // Empty string? return error value
+  if ((**pStr == NMEA0183_FIELD_DELIMITER) || (**pStr == NMEA0183_CHECKSUM_DELIMITER)) return NMEA0183_NO_VALUE; // If the field is empty, set no data
+  size_t CharCount = (max == 0 ? NMEA0183_FRAME_BUFFER_SIZE : max); // If max = 0, then extract until ',', '*', or '\0'
   uint32_t Result = 0;
 
   //--- Extract uint32 from hex string ---
-  while ((charCount > 0) && (*pChar != 0))
+  while ((CharCount > 0) && (**pStr != 0))
   {
-    uint32_t CurChar = (uint32_t)(*pChar);
+    if (**pStr == (char)max) break;       // Stop char found
+    uint32_t CurChar = (uint32_t)(**pStr);
     if ((CurChar - 0x30) <= 9u)           // Char in '0'..'9' ?
     {
       Result <<= 4;
@@ -225,8 +228,8 @@ uint32_t __NMEA0183_HexStringToUint(const char* pStr, size_t charCount)
       }
       else break;
     }
-    ++pChar;
-    --charCount;
+    ++(*pStr);
+    --CharCount;
   }
   return Result;
 }
@@ -606,19 +609,19 @@ static eERRORRESULT NMEA0183_ProcessTXT(const char* pSentence, NMEA0183_TXTdata*
   while (TxtPos < NMEA0183_TXT_MESSAGE_MAX_SIZE)
   {
     if ((*pStr == '\0') || (*pStr == NMEA0183_CHECKSUM_DELIMITER)) break;
-    if (*pStr != NMEA0183_CHAR_HEX_DELIMITER) pData->TextMessage[TxtPos] = *pStr; //*** Get char ('^' detected)
-    else
+    if (*pStr != NMEA0183_CHAR_HEX_DELIMITER)
+    {
+        pData->TextMessage[TxtPos] = *pStr; //*** Get char
+        ++pStr;
+    }
+    else                                    // '^' detected
     {
       ++pStr;
       if ((*pStr == '\0') || (*pStr == NMEA0183_CHECKSUM_DELIMITER))
       { Error = ERR__PARSE_ERROR; break; }
-      pData->TextMessage[TxtPos] = (char)__NMEA0183_HexStringToUint(pStr, 2);     //*** Get hex encoded char (2 hex chars to decode)
-      ++pStr;                                                                     // Parsing: Skip 2 hex char
-      if ((*pStr == '\0') || (*pStr == NMEA0183_CHECKSUM_DELIMITER))
-      { Error = ERR__PARSE_ERROR; break; }
+      pData->TextMessage[TxtPos] = (char)__NMEA0183_HexStringToUint(&pStr, 2); //*** Get hex encoded char (2 hex chars to decode)
     }
     ++TxtPos;
-    ++pStr;
   }
   pData->TextMessage[TxtPos] = '\0';
   if (*pStr != NMEA0183_CHECKSUM_DELIMITER) Error = ERR__PARSE_ERROR; // Should be a '*'
@@ -743,9 +746,10 @@ eERRORRESULT NMEA0183_ProcessFrame(NMEA0183_DecodeInput* pDecoder, NMEA0183_Deco
   pDecoder->State = NMEA0183_WAIT_START; // Frame is Processed, wait for a new frame
 
   //--- Frame control ---
-  if (pDecoder->RawFrame[0] != NMEA0183_START_DELIMITER) return ERR__BAD_FRAME_TYPE;  // The frame shall start with '$'
-  const uint8_t FrameCRC = (uint8_t)__NMEA0183_HexStringToUint(&pDecoder->CRC[0], 2); // Get frame CRC
-  if (FrameCRC != pDecoder->CurrCalcCRC) return ERR__CRC_ERROR;                       // The frame CRC shall correspond to the one calculated
+  if (pDecoder->RawFrame[0] != NMEA0183_START_DELIMITER) return ERR__BAD_FRAME_TYPE; // The frame shall start with '$'
+  char* pCRC = &pDecoder->CRC[0];
+  const uint8_t FrameCRC = (uint8_t)__NMEA0183_HexStringToUint(&pCRC, 2);            // Get frame CRC
+  if (FrameCRC != pDecoder->CurrCalcCRC) return ERR__CRC_ERROR;                      // The frame CRC shall correspond to the one calculated
 
   //--- Select sentence ---
   char* pRaw = &pDecoder->RawFrame[1];
