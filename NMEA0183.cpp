@@ -343,6 +343,60 @@ static eERRORRESULT NMEA0183_ProcessAAM(const char* pSentence, NMEA0183_AAMdata*
 
 
 
+#ifdef NMEA0183_DECODE_ALM
+//=============================================================================
+// Process the ALM (GPS Almanac Data) sentence
+//=============================================================================
+static eERRORRESULT NMEA0183_ProcessALM(const char* pSentence, NMEA0183_ALMdata* pData)
+{ // Format: $--ALM,<Total:t>,<Curr:c>,<SatPRN:ss>,<WeekNum:[w][w][w]w>,<SV:vv>,<e:eeee>,<toa:yy>,<Sigma_i:iiii>,<OMEGADOT:dddd>,<rootA:rrrrrr>,<OMEGA:oooooo>,<OMEGA0:aaaaaa>,<Mo:mmmmmm>,<af0:aaa>,<af1:bbb>*<CheckSum>
+  char* pStr = (char*)pSentence;
+  uint32_t Value;
+
+  //--- Get message informations ---
+  pData->TotalSentence      =  (uint8_t)__NMEA0183_StringToInt(&pStr, 0, 0); //*** Get and save total sentence <t>
+  NMEA0183_CHECK_FIELD_DELIMITER;
+  pData->SentenceNumber     =  (uint8_t)__NMEA0183_StringToInt(&pStr, 0, 0); //*** Get and save sequence number <c>
+  NMEA0183_CHECK_FIELD_DELIMITER;
+  pData->SatellitePRNnumber =  (uint8_t)__NMEA0183_StringToInt(&pStr, 0, 0); //*** Get and save satellite PRN number <ss>
+  NMEA0183_CHECK_FIELD_DELIMITER;
+  pData->GPSweekNumber      = (uint16_t)__NMEA0183_StringToInt(&pStr, 0, 0); //*** Get and save GPS week number <[w][w][w]w>
+  NMEA0183_CHECK_FIELD_DELIMITER;
+
+  //--- Get data ---
+  pData->SV_NAVhealth = (uint8_t)__NMEA0183_HexStringToUint(&pStr, ',');   //*** Get and save NAV+SV health <vv>
+  NMEA0183_CHECK_FIELD_DELIMITER;
+  pData->e        = (uint16_t)__NMEA0183_HexStringToUint(&pStr, ',');      //*** Get and save inclination eccentricity <eeee>
+  NMEA0183_CHECK_FIELD_DELIMITER;
+  pData->toa      =  (uint8_t)__NMEA0183_HexStringToUint(&pStr, ',');      //*** Get and save almanac reference time in seconds <yy>
+  NMEA0183_CHECK_FIELD_DELIMITER;
+  pData->Sigma_i  =  (int16_t)__NMEA0183_HexStringToUint(&pStr, ',');      //*** Get and save inclination angle <iiii>
+  NMEA0183_CHECK_FIELD_DELIMITER;
+  pData->OMEGADOT =  (int16_t)__NMEA0183_HexStringToUint(&pStr, ',');      //*** Get and save rate of right ascension <dddd>
+  NMEA0183_CHECK_FIELD_DELIMITER;
+  pData->Root_A   = (uint32_t)__NMEA0183_HexStringToUint(&pStr, ',');      //*** Get and save root of semi-major axis <rrrrrr>
+  NMEA0183_CHECK_FIELD_DELIMITER;
+  Value = (uint32_t)__NMEA0183_HexStringToUint(&pStr, ',');                //*** Get 24-bit signed longitude of ascension node <oooooo>
+  pData->OMEGA = NMEA0183_DATA_EXTRACT_TO_SIGNED(int32_t, Value, 0, 24);   //*** Save 32-bit signed longitude of ascension node <oooooo>
+  NMEA0183_CHECK_FIELD_DELIMITER;
+  Value = (uint32_t)__NMEA0183_HexStringToUint(&pStr, ',');                //*** Get 24-bit signed argument of perigee <aaaaaa>
+  pData->OMEGA_0 = NMEA0183_DATA_EXTRACT_TO_SIGNED(int32_t, Value, 0, 24); //*** Save 32-bit signed argument of perigee <aaaaaa>
+  NMEA0183_CHECK_FIELD_DELIMITER;
+  Value = (uint32_t)__NMEA0183_HexStringToUint(&pStr, ',');                //*** Get 24-bit signed mean anomaly <mmmmmm>
+  pData->Mo = NMEA0183_DATA_EXTRACT_TO_SIGNED(int32_t, Value, 0, 24);      //*** Save 32-bit signed mean anomaly <mmmmmm>
+  NMEA0183_CHECK_FIELD_DELIMITER;
+  Value = (uint32_t)__NMEA0183_HexStringToUint(&pStr, ',');                //*** Get 11-bit clock parameter <aaa>
+  pData->af0 = NMEA0183_DATA_EXTRACT_TO_SIGNED(int16_t, Value, 0, 11);     //*** Save 16-bit clock parameter <aaa>
+  NMEA0183_CHECK_FIELD_DELIMITER;
+  Value = (uint32_t)__NMEA0183_HexStringToUint(&pStr, ',');                //*** Get 11-bit clock parameter <bbb>
+  pData->af1 = NMEA0183_DATA_EXTRACT_TO_SIGNED(int16_t, Value, 0, 11);     //*** Save 16-bit clock parameter <bbb>
+
+  if (*pStr != NMEA0183_CHECKSUM_DELIMITER) return ERR__PARSE_ERROR;       // Should be a '*'
+  return ERR_OK;
+}
+#endif
+
+
+
 #ifdef NMEA0183_DECODE_GGA
 //=============================================================================
 // Process the GGA (Global positioning system fixed data) sentence
@@ -765,6 +819,9 @@ eERRORRESULT NMEA0183_ProcessFrame(NMEA0183_DecodeInput* pDecoder, NMEA0183_Deco
   {
 #ifdef NMEA0183_DECODE_AAM
     case NMEA0183_AAM: Error = NMEA0183_ProcessAAM(pRaw, &pData->AAM); break;
+#endif
+#ifdef NMEA0183_DECODE_ALM
+    case NMEA0183_ALM: Error = NMEA0183_ProcessALM(pRaw, &pData->ALM); break;
 #endif
 #ifdef NMEA0183_DECODE_GGA
     case NMEA0183_GGA: Error = NMEA0183_ProcessGGA(pRaw, &pData->GGA); break;

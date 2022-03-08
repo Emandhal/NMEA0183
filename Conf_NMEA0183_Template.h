@@ -79,6 +79,7 @@
 // GPS sentences
 //=============================================================================
 #define NMEA0183_DECODE_AAM
+#define NMEA0183_DECODE_ALM
 #define NMEA0183_DECODE_GGA
 #define NMEA0183_DECODE_GSA
 #define NMEA0183_DECODE_GSV

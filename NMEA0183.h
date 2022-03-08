@@ -87,6 +87,11 @@ extern "C" {
 
 //-----------------------------------------------------------------------------
 
+//! Sign extending from a variable 'bitwidth' at 'pos' without branching (will be simplified at compile time with 'pos' and 'bitwidth' fixed)
+#define NMEA0183_DATA_EXTRACT_TO_SIGNED(out_type,data,pos,bitwidth)  (out_type)( ((((uint32_t)(data) >> (pos)) & ((1 << (bitwidth)) - 1)) ^ (1 << ((bitwidth) - 1))) - (1 << ((bitwidth) - 1)) )
+
+//-----------------------------------------------------------------------------
+
 
 
 
@@ -120,6 +125,9 @@ NMEA0183_PACKENUM(eNMEA0183_SentencesID, uint32_t)
 {
 #ifdef NMEA0183_DECODE_AAM
   NMEA0183_AAM = NMEA0183_SENTENCE_ID('A', 'A', 'M'), //!< Waypoint Arrival Alarm
+#endif
+#ifdef NMEA0183_DECODE_ALM
+  NMEA0183_ALM = NMEA0183_SENTENCE_ID('A', 'L', 'M'), //!< GPS Almanac Data
 #endif
 #ifdef NMEA0183_DECODE_GGA
   NMEA0183_GGA = NMEA0183_SENTENCE_ID('G', 'G', 'A'), //!< Global positioning system fixed data
@@ -211,6 +219,90 @@ typedef struct NMEA0183_AAMdata
   uint32_t CircleRadius; //!< Arrival circle radius in nautical miles (divide by 10^4 to get the circle radius in nautical miles)
   char WaypointID[NMEA0183_AAM_WAYPOINT_ID_MAX_SIZE]; //!< Waypoint ID
 } NMEA0183_AAMdata;
+
+//-----------------------------------------------------------------------------
+
+/*! @brief ALM (GPS Almanac Data) sentence fields extraction structure
+ * Format: $--ALM,<Total:t>,<Curr:c>,<SatPRN:ss>,<WeekNum:[w][w][w]w>,<SV:vv>,<e:eeee>,<toa:yy>,<Sigma_i:iiii>,<OMEGADOT:dddd>,<rootA:rrrrrr>,<OMEGA:oooooo>,<OMEGA0:aaaaaa>,<Mo:mmmmmm>,<af0:aaa>,<af1:bbb>*<CheckSum>
+ * Contains GPS week number, satellite health and the complete almanac data for one satellite.
+ * Multiple sentences may be transmitted, one for each satellite in the GPS constellation, up to a maximum of 32 sentences.
+ */
+typedef struct NMEA0183_ALMdata
+{
+  uint8_t TotalSentence;      //!< Total number of sentences extracted
+  uint8_t SentenceNumber;     //!< Sentence number extracted
+  uint8_t SatellitePRNnumber; //!< Satellite PRN number (01 to 32) extracted
+  uint16_t GPSweekNumber;     //!< GPS week number (0 to 9999) extracted
+  uint8_t SV_NAVhealth;       //!< NAV+SV health, bits 17-24 of each almanac page extracted
+  uint16_t e;                 //!< e, eccentricity (Scale factor LSB: 2^-21) extracted
+  uint8_t toa;                //!< toa, almanac reference time in seconds (Scale factor LSB: 2^12) extracted
+  int16_t Sigma_i;            //!< Sigma i (Relative to i0 = 0.3 semi-circles), inclination angle in semi-circles (Scale factor LSB: 2^-19) extracted
+  int16_t OMEGADOT;           //!< OMEGADOT, rate of right ascension in semi-circles/sec (Scale factor LSB: 2^-38) extracted
+  uint32_t Root_A;            //!< A^(1/2), root of semi-major axis in meters^(1/2) (Scale factor LSB: 2^-11) extracted
+  int32_t OMEGA;              //!< OMEGA, longitude of ascension node in semi-circles (Scale factor LSB: 2^-23) extracted
+  int32_t OMEGA_0;            //!< OMEGA 0, argument of perigee in semi-circles (Scale factor LSB: 2^-23) extracted
+  int32_t Mo;                 //!< Mo, mean anomaly in semi-circles (Scale factor LSB: 2^-23) extracted
+  int16_t af0;                //!< af0, clock parameter in seconds (Scale factor LSB: 2^-20) extracted
+  int16_t af1;                //!< af1, clock parameter in sec/sec (Scale factor LSB: 2^-38) extracted
+} NMEA0183_ALMdata;
+
+//! Codes for health of SV signal components enum
+typedef enum
+{
+  NMEA0183_ALL_SIGNALS_OK        = 0b00000, //!< All signals OK
+  NMEA0183_ALL_SIGNALS_WEAK      = 0b00001, //!< All Signals weak (3 to 6 dB below specified power level due to reduced power output, excess phase noise, SV attitude, etc.)
+  NMEA0183_ALL_SIGNALS_DEAD      = 0b00010, //!< All signals dead
+  NMEA0183_ALL_SIGNALS_NO_MOD    = 0b00011, //!< All signals have no data modulation
+  NMEA0183_L1_P_SIGNALS_WEAK     = 0b00100, //!< L1 P signals weak
+  NMEA0183_L1_P_SIGNALS_DEAD     = 0b00101, //!< L1 P signals dead
+  NMEA0183_L1_P_SIGNALS_NO_MOD   = 0b00110, //!< L1 P signals have no data modulation
+  NMEA0183_L2_P_SIGNALS_WEAK     = 0b00111, //!< L2 P signals weak
+  NMEA0183_L2_P_SIGNALS_DEAD     = 0b01000, //!< L2 P signals dead
+  NMEA0183_L2_P_SIGNALS_NO_MOD   = 0b01001, //!< L2 P signals have no data modulation
+  NMEA0183_L1_C_SIGNALS_WEAK     = 0b01010, //!< L1 C signals weak
+  NMEA0183_L1_C_SIGNALS_DEAD     = 0b01011, //!< L1 C signals dead
+  NMEA0183_L1_C_SIGNALS_NO_MOD   = 0b01100, //!< L1 C signals have no data modulation
+  NMEA0183_L2_C_SIGNALS_WEAK     = 0b01101, //!< L2 C signals weak
+  NMEA0183_L2_C_SIGNALS_DEAD     = 0b01110, //!< L2 C signals dead
+  NMEA0183_L2_C_SIGNALS_NO_MOD   = 0b01111, //!< L2 C signals have no data modulation
+  NMEA0183_L1L2_P_SIGNALS_WEAK   = 0b10000, //!< L1 & L2 P signals weak
+  NMEA0183_L1L2_P_SIGNALS_DEAD   = 0b10001, //!< L1 & L2 P signals dead
+  NMEA0183_L1L2_P_SIGNALS_NO_MOD = 0b10010, //!< L1 & L2 P signals have no data modulation
+  NMEA0183_L1L2_C_SIGNALS_WEAK   = 0b10011, //!< L1 & L2 C signals weak
+  NMEA0183_L1L2_C_SIGNALS_DEAD   = 0b10100, //!< L1 & L2 C signals dead
+  NMEA0183_L1L2_C_SIGNALS_NO_MOD = 0b10101, //!< L1 & L2 C signals have no data modulation
+  NMEA0183_L1_SIGNALS_WEAK       = 0b10110, //!< L1 signals weak (3 to 6 dB below specified power level due to reduced power output, excess phase noise, SV attitude, etc.)
+  NMEA0183_L1_SIGNALS_DEAD       = 0b10111, //!< L1 signals dead
+  NMEA0183_L1_SIGNALS_NO_MOD     = 0b11000, //!< L1 signals have no data modulation
+  NMEA0183_L2_SIGNALS_WEAK       = 0b11001, //!< L2 signals weak (3 to 6 dB below specified power level due to reduced power output, excess phase noise, SV attitude, etc.)
+  NMEA0183_L2_SIGNALS_DEAD       = 0b11010, //!< L2 signals dead
+  NMEA0183_L2_SIGNALS_NO_MOD     = 0b11011, //!< L2 signals have no data modulation
+  NMEA0183_SV_OUT                = 0b11100, //!< SV is temporarily out (Do not use this SV during current pass)
+  NMEA0183_SV_SOON_OUT           = 0b11101, //!< SV will be temporarily out (use with caution)
+  NMEA0183_SPARE                 = 0b11110, //!< Spare
+  NMEA0183_MULTIPLE_ANOMALIES    = 0b11111, //!< More than one combination would be required to describe anomalies (except NMEA0183_SV_OUT and NMEA0183_SV_SOON_OUT)
+} eNMEA0183_SVhealth;
+
+#define NMEA0183_ALM_SV_HEALTH_Pos         0
+#define NMEA0183_ALM_SV_HEALTH_Mask        (0x1Fu << NMEA0183_ALM_SV_HEALTH_Pos)
+#define NMEA0183_ALM_SV_HEALTH_GET(value)  (eNMEA0183_SVhealth)(((uint8_t)(value) & NMEA0183_ALM_SV_HEALTH_Mask) >> NMEA0183_ALM_SV_HEALTH_Pos) //!< Get SV health
+
+//! Codes for NAV data health indications enum
+typedef enum
+{
+  NMEA0183_ALL_DATA_OK            = 0b000, //!< All data OK
+  NMEA0183_PARITY_FAILURE         = 0b100, //!< Parity failure - some or all parity bad
+  NMEA0183_TLM_HOW_FORMAT_PROBLEM = 0b010, //!< TLM/HOW format problem - any departure from standard format (e.g., preamble misplaced and/or incorrect, etc.), except for incorrect Z-count, as reported in HOW
+  NMEA0183_ZCOUNT_IN_HOW_BAD      = 0b110, //!< Z-count in HOW bad - any problem with Z-count value not reflecting actual code phase
+  NMEA0183_SUBFRAMES_1_2_3        = 0b001, //!< Subframes 1, 2, 3 - one or more elements in words three through ten of one or more subframes are bad
+  NMEA0183_SUBFRAMES_4_5          = 0b101, //!< Subframes 4, 5 - one or more elements in words three through ten of one or more subframes are bad
+  NMEA0183_ALL_UPLOADED_DATA_BAD  = 0b011, //!< All uploaded data bad - one or more elements in words three through ten of any one (or more) subframes are bad
+  NMEA0183_ALL_DATA_BAD           = 0b111, //!< All data bad - TLM word and/or HOW and one or more elements in any one (or more) subframes are bad
+} eNMEA0183_NAVhealth;
+
+#define NMEA0183_ALM_NAV_HEALTH_Pos         5
+#define NMEA0183_ALM_NAV_HEALTH_Mask        (0x7u << NMEA0183_ALM_NAV_HEALTH_Pos)
+#define NMEA0183_ALM_NAV_HEALTH_GET(value)  (eNMEA0183_NAVhealth)(((uint8_t)(value) & NMEA0183_ALM_NAV_HEALTH_Mask) >> NMEA0183_ALM_NAV_HEALTH_Pos) //!< Get NAV health
 
 //-----------------------------------------------------------------------------
 
@@ -370,6 +462,9 @@ typedef struct NMEA0183_DecodedData
   {
 #ifdef NMEA0183_DECODE_AAM
     NMEA0183_AAMdata AAM;                   //!< AAM (Waypoint Arrival Alarm) extracted. Use if 'SentenceID' = NMEA0183_AAM
+#endif
+#ifdef NMEA0183_DECODE_ALM
+    NMEA0183_ALMdata ALM;                   //!< ALM (GPS Almanac Data) extracted. Use if 'SentenceID' = NMEA0183_ALM
 #endif
 #ifdef NMEA0183_DECODE_GGA
     NMEA0183_GGAdata GGA;                   //!< GGA (Global positioning system fixed data) extracted. Use if 'SentenceID' = NMEA0183_GGA

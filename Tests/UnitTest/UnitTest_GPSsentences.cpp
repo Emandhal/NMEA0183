@@ -13,6 +13,8 @@ namespace Microsoft { namespace VisualStudio { namespace CppUnitTestFramework
     template<> inline std::wstring ToString<eNMEA0183_State>(const eNMEA0183_State& t) { RETURN_WIDE_STRING(t); }
     template<> inline std::wstring ToString<eNMEA0183_TalkerID>(const eNMEA0183_TalkerID& t) { RETURN_WIDE_STRING(t); }
     template<> inline std::wstring ToString<eNMEA0183_SentencesID>(const eNMEA0183_SentencesID& t) { RETURN_WIDE_STRING(t); }
+    template<> inline std::wstring ToString<eNMEA0183_SVhealth>(const eNMEA0183_SVhealth& t) { RETURN_WIDE_STRING(t); }
+    template<> inline std::wstring ToString<eNMEA0183_NAVhealth>(const eNMEA0183_NAVhealth& t) { RETURN_WIDE_STRING(t); }
 }   }   }
 
 
@@ -68,6 +70,48 @@ namespace NMEA0183test
             Assert::AreEqual('A', FrameData.AAM.PassedWaypoint, L"Test (Full Data), PassedWaypoint should be 'A'");
             Assert::AreEqual(1000u, FrameData.AAM.CircleRadius, L"Test (Full Data), CircleRadius should be 1000");
             Assert::AreEqual(0, strncmp("WPTNME", &FrameData.AAM.WaypointID[0], strlen(FrameData.TXT.TextMessage)), L"Test (Full Data), WaypointID should be 'WPTNME'");
+        }
+#endif
+
+#ifdef NMEA0183_DECODE_ALM
+        TEST_METHOD(TestMethod_ALM)
+        {
+            NMEA0183decoder NMEA;
+            NMEA0183_DecodedData FrameData;
+            eNMEA0183_State CurrentState;
+            eERRORRESULT LastError = ERR_OK;
+
+            //=== Test (Full Data) ===========================================
+            const char* const TEST_AAM_FULL_DATA_FRAME = "$GPALM,1,1,15,1159,74,441d,4e,16be,fd5e,a10c9f,4a2da4,686e81,a8cbe1,0a4,401*24\r\n";
+            for (size_t z = 0; z < strlen(TEST_AAM_FULL_DATA_FRAME); ++z) (void)NMEA.AddReceivedCharacter(TEST_AAM_FULL_DATA_FRAME[z]);
+            CurrentState = NMEA.GetDecoderState();
+            Assert::AreEqual(NMEA0183_TO_PROCESS, CurrentState, L"Test (Full Data), state should be NMEA0183_TO_PROCESS");
+            LastError = NMEA.ProcessFrame(&FrameData);
+            Assert::AreEqual(ERR_OK, LastError, L"Test (Full Data), error should be ERR_OK");
+            CurrentState = NMEA.GetDecoderState();
+            Assert::AreEqual(NMEA0183_WAIT_START, CurrentState, L"Test (Full Data), state should be NMEA0183_WAIT_START");
+            //--- Test data ---
+            Assert::AreEqual(true, FrameData.ParseIsValid, L"Test (Full Data), ParseIsValid should be true");
+            Assert::AreEqual(NMEA0183_GP, FrameData.TalkerID, L"Test (Full Data), TalkerID should be NMEA0183_GP");
+            Assert::AreEqual(NMEA0183_ALM, FrameData.SentenceID, L"Test (Full Data), SentenceID should be NMEA0183_ALM");
+            Assert::AreEqual((uint8_t)1u, FrameData.ALM.TotalSentence, L"Test (Full Data), TotalSentence should be 1");
+            Assert::AreEqual((uint8_t)1u, FrameData.ALM.SentenceNumber, L"Test (Full Data), SentenceNumber should be 1");
+            Assert::AreEqual((uint8_t)15u, FrameData.ALM.SatellitePRNnumber, L"Test (Full Data), SatellitePRNnumber should be 15");
+            Assert::AreEqual((uint16_t)1159u, FrameData.ALM.GPSweekNumber, L"Test (Full Data), GPSweekNumber should be 1159");
+            eNMEA0183_SVhealth SVhealth = NMEA0183_ALM_SV_HEALTH_GET(FrameData.ALM.SV_NAVhealth);
+            Assert::AreEqual(NMEA0183_L1L2_C_SIGNALS_DEAD, SVhealth, L"Test (Full Data), SVhealth should be NMEA0183_L1L2_C_SIGNALS_DEAD");
+            eNMEA0183_NAVhealth NAVhealth = NMEA0183_ALM_NAV_HEALTH_GET(FrameData.ALM.SV_NAVhealth);
+            Assert::AreEqual(NMEA0183_ALL_UPLOADED_DATA_BAD, NAVhealth, L"Test (Full Data), NAVhealth should be NMEA0183_ALL_UPLOADED_DATA_BAD");
+            Assert::AreEqual((uint16_t)0x441D, FrameData.ALM.e, L"Test (Full Data), e should be 0x441D");
+            Assert::AreEqual((uint8_t)0x4E, FrameData.ALM.toa, L"Test (Full Data), toa should be 0x4E");
+            Assert::AreEqual((int16_t)0x16BE, FrameData.ALM.Sigma_i, L"Test (Full Data), Sigma_i should be 0x16BE");
+            Assert::AreEqual((int16_t)0xFD5E, FrameData.ALM.OMEGADOT, L"Test (Full Data), OMEGADOT should be 0xFD5E");
+            Assert::AreEqual((uint32_t)0xA10C9F, FrameData.ALM.Root_A, L"Test (Full Data), Root_A should be 0xA10C9F");
+            Assert::AreEqual((int32_t)0x4A2DA4, FrameData.ALM.OMEGA, L"Test (Full Data), OMEGA should be 0x4A2DA4");
+            Assert::AreEqual((int32_t)0x686E81, FrameData.ALM.OMEGA_0, L"Test (Full Data), OMEGA_0 should be 0x686E81");
+            Assert::AreEqual((int32_t)0xFFA8CBE1, FrameData.ALM.Mo, L"Test (Full Data), Mo should be 0xFFA8CBE1"); // A8CBE1 is 24-bits signed so in 32-bit signed it is 0xFFA8CBE1
+            Assert::AreEqual((int16_t)0x0A4, FrameData.ALM.af0, L"Test (Full Data), af0 should be 0x0A4");
+            Assert::AreEqual((int16_t)0xFC01, FrameData.ALM.af1, L"Test (Full Data), af1 should be 0xC01"); // 401 is 11-bits signed so in 16-bit signed it is 0xFC01
         }
 #endif
 
