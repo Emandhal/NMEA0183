@@ -144,6 +144,9 @@ NMEA0183_PACKENUM(eNMEA0183_SentencesID, uint32_t)
 #ifdef NMEA0183_DECODE_GSV
   NMEA0183_GSV = NMEA0183_SENTENCE_ID('G', 'S', 'V'), //!< GNSS satellites in view
 #endif
+#ifdef NMEA0183_DECODE_HDG
+  NMEA0183_HDG = NMEA0183_SENTENCE_ID('H', 'D', 'G'), //!< Heading, Deviation & Variation
+#endif
 #ifdef NMEA0183_DECODE_RMC
   NMEA0183_RMC = NMEA0183_SENTENCE_ID('R', 'M', 'C'), //!< Recommended minimum specific GNSS data
 #endif
@@ -421,6 +424,19 @@ typedef struct NMEA0183_GSVdata
 
 //-----------------------------------------------------------------------------
 
+/*! @brief HDG (Heading - Deviation and Variation) sentence fields extraction structure
+ * Format: $--HDG,<Heading:hh.h[h]>,<MagDev:dd.d[d]>,<E/W>,<MagVar:vv.v[v]>,<E/W>*<CheckSum>
+ * Heading (magnetic sensor reading), which if corrected for deviation, will produce Magnetic heading, which if offset by variation will provide True heading
+ */
+typedef struct NMEA0183_HDGdata
+{
+  uint16_t Heading;            //!< Magnetic sensor heading, in degree (divide by 10^2 to get the real heading)
+  NMEA0183_Magnetic Deviation; //!< Magnetic deviation in degrees extracted
+  NMEA0183_Magnetic Variation; //!< Magnetic variation in degrees extracted
+} NMEA0183_HDGdata;
+
+//-----------------------------------------------------------------------------
+
 /*! @brief RMC (Recommended Minimum sentence C) sentence fields extraction structure
  * Format: $--RMC,<hhmmss.zzz>,<Status:A/V>,<Latitude:ddmm.mmmm[m][m][m]>,<N/S>,<Longitude:dddmm.mmmm[m][m][m]>,<E/W>,<Speed:sss.ss[s][s]>,<Track:ttt.tt[t][t]>,<ddmmyy>,<MagVar:vv.v[v]>,<E/W>[,<FAA:A/D/E/M/S/N>][,<NavStatus:S/C/U/V>]*<CheckSum>
  * Time, date, position, course and speed data provided by a GNSS navigation receiver. This sentence is transmitted at intervals not exceeding 2-seconds and is always accompanied by RMB when a destination waypoint is active.
@@ -535,6 +551,9 @@ typedef struct NMEA0183_DecodedData
 #endif
 #ifdef NMEA0183_DECODE_GSV
     NMEA0183_GSVdata GSV;                   //!< GSV (GNSS Satellites in View) extracted. Use if 'SentenceID' = NMEA0183_GSV
+#endif
+#ifdef NMEA0183_DECODE_HDG
+    NMEA0183_HDGdata HDG;                   //!< HDG (Heading - Deviation and Variation) extracted. Use if 'SentenceID' = NMEA0183_HDG
 #endif
 #ifdef NMEA0183_DECODE_RMC
     NMEA0183_RMCdata RMC;                   //!< RMC (Recommended Minimum sentence C) extracted. Use if 'SentenceID' = NMEA0183_RMC

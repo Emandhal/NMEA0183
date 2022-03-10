@@ -657,6 +657,46 @@ static eERRORRESULT NMEA0183_ProcessGSV(const char* pSentence, NMEA0183_GSVdata*
 
 
 
+#ifdef NMEA0183_DECODE_HDG
+//=============================================================================
+// Process the HDG (Heading - Deviation and Variation) sentence
+//=============================================================================
+static eERRORRESULT NMEA0183_ProcessHDG(const char* pSentence, NMEA0183_HDGdata* pData)
+{ // Format: $--HDG,<Heading:hh.h[h]>,<MagDev:dd.d[d]>,<E/W>,<MagVar:vv.v[v]>,<E/W>*<CheckSum>
+  char* pStr = (char*)pSentence;
+
+  //--- Get Heading ---
+  pData->Heading = (uint32_t)__NMEA0183_StringToInt(&pStr, 0, 2);    //*** Get and save heading <hh.h[h]> (divide by 10^2 to get the real minute)
+  NMEA0183_CHECK_FIELD_DELIMITER;
+
+  //--- Get Magnetic Deviation ---
+  pData->Deviation.Value = (uint16_t)__NMEA0183_StringToInt(&pStr, 0, 2); //*** Get track <dd.d[d]> (divide by 10^2 to get the real magnetic deviation)
+  NMEA0183_CHECK_FIELD_DELIMITER;
+  if (*pStr != NMEA0183_FIELD_DELIMITER)
+  {
+    pData->Deviation.Direction = *pStr;                              //*** Get magnetic deviation direction <E/W>
+    ++pStr;                                                          // Parsing: Skip <E/W>
+  }
+  else pData->Deviation.Direction = ' ';                             //*** Set magnetic deviation direction not specified
+  NMEA0183_CHECK_FIELD_DELIMITER;
+
+  //--- Get Magnetic Variation ---
+  pData->Variation.Value = (uint16_t)__NMEA0183_StringToInt(&pStr, 0, 2); //*** Get track <vv.v[v]> (divide by 10^2 to get the real magnetic variation)
+  NMEA0183_CHECK_FIELD_DELIMITER;
+  if (*pStr != NMEA0183_FIELD_DELIMITER)
+  {
+    pData->Variation.Direction = *pStr;                              //*** Get magnetic variation direction <E/W>
+    ++pStr;                                                          // Parsing: Skip <E/W>
+  }
+  else pData->Variation.Direction = ' ';                             //*** Set magnetic variation direction not specified
+
+  if (*pStr != NMEA0183_CHECKSUM_DELIMITER) return ERR__PARSE_ERROR; // Should be a '*'
+  return ERR_OK;
+}
+#endif
+
+
+
 #ifdef NMEA0183_DECODE_RMC
 //=============================================================================
 // Process the RMC (Recommended Minimum sentence C) sentence
@@ -956,6 +996,9 @@ eERRORRESULT NMEA0183_ProcessFrame(NMEA0183_DecodeInput* pDecoder, NMEA0183_Deco
 #endif
 #ifdef NMEA0183_DECODE_GSV
     case NMEA0183_GSV: Error = NMEA0183_ProcessGSV(pRaw, &pData->GSV); break;
+#endif
+#ifdef NMEA0183_DECODE_HDG
+    case NMEA0183_HDG: Error = NMEA0183_ProcessHDG(pRaw, &pData->HDG); break;
 #endif
 #ifdef NMEA0183_DECODE_RMC
     case NMEA0183_RMC: Error = NMEA0183_ProcessRMC(pRaw, &pData->RMC); break;
