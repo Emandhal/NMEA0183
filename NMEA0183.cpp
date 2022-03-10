@@ -718,6 +718,27 @@ static eERRORRESULT NMEA0183_ProcessHDM(const char* pSentence, NMEA0183_HDMdata*
 
 
 
+#ifdef NMEA0183_DECODE_HDT
+//=============================================================================
+// Process the HDT (Heading - True) sentence
+//=============================================================================
+static eERRORRESULT NMEA0183_ProcessHDT(const char* pSentence, NMEA0183_HDTdata* pData)
+{ // Format: $--HDT,<Heading:hh.h[h]>,T,<E/W>*<CheckSum>
+    char* pStr = (char*)pSentence;
+
+    //--- Get Heading ---
+    pData->Heading = (uint32_t)__NMEA0183_StringToInt(&pStr, 0, 2);    //*** Get and save heading <hh.h[h]> (divide by 10^2 to get the real heading)
+    NMEA0183_CHECK_FIELD_DELIMITER;
+    if (*pStr != 'T') return ERR__PARSE_ERROR;                         // Parsing: Should be 'T'
+    ++pStr;
+
+    if (*pStr != NMEA0183_CHECKSUM_DELIMITER) return ERR__PARSE_ERROR; // Should be a '*'
+    return ERR_OK;
+}
+#endif
+
+
+
 #ifdef NMEA0183_DECODE_RMC
 //=============================================================================
 // Process the RMC (Recommended Minimum sentence C) sentence
@@ -1023,6 +1044,9 @@ eERRORRESULT NMEA0183_ProcessFrame(NMEA0183_DecodeInput* pDecoder, NMEA0183_Deco
 #endif
 #ifdef NMEA0183_DECODE_HDM
     case NMEA0183_HDM: Error = NMEA0183_ProcessHDM(pRaw, &pData->HDM); break;
+#endif
+#ifdef NMEA0183_DECODE_HDT
+    case NMEA0183_HDT: Error = NMEA0183_ProcessHDT(pRaw, &pData->HDT); break;
 #endif
 #ifdef NMEA0183_DECODE_RMC
     case NMEA0183_RMC: Error = NMEA0183_ProcessRMC(pRaw, &pData->RMC); break;

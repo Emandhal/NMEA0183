@@ -78,5 +78,30 @@ namespace NMEA0183test
             Assert::AreEqual((uint16_t)9380u, FrameData.HDG.Heading, L"Test (Full Data), Speed should be 9830");
         }
 #endif
+
+#ifdef NMEA0183_DECODE_HDT
+        TEST_METHOD(TestMethod_HDT)
+        {
+            NMEA0183decoder NMEA;
+            NMEA0183_DecodedData FrameData;
+            eNMEA0183_State CurrentState;
+            eERRORRESULT LastError = ERR_OK;
+
+            //=== Test (Full Data) ============================================
+            const char* const TEST_HDT_FULL_DATA_FRAME = "$HCHDT,245.1,T*2B\r\n";
+            for (size_t z = 0; z < strlen(TEST_HDT_FULL_DATA_FRAME); ++z) (void)NMEA.AddReceivedCharacter(TEST_HDT_FULL_DATA_FRAME[z]);
+            CurrentState = NMEA.GetDecoderState();
+            Assert::AreEqual(NMEA0183_TO_PROCESS, CurrentState, L"Test (Full Data), state should be NMEA0183_TO_PROCESS");
+            LastError = NMEA.ProcessFrame(&FrameData);
+            Assert::AreEqual(ERR_OK, LastError, L"Test (Full Data), error should be ERR_OK");
+            CurrentState = NMEA.GetDecoderState();
+            Assert::AreEqual(NMEA0183_WAIT_START, CurrentState, L"Test (Full Data), state should be NMEA0183_WAIT_START");
+            //--- Test data ---
+            Assert::AreEqual(true, FrameData.ParseIsValid, L"Test (Full Data), ParseIsValid should be true");
+            Assert::AreEqual((eNMEA0183_TalkerID)NMEA0183_TALKER_ID('H', 'C'), FrameData.TalkerID, L"Test (Full Data), TalkerID should be NMEA0183_HC");
+            Assert::AreEqual(NMEA0183_HDT, FrameData.SentenceID, L"Test (Full Data), SentenceID should be NMEA0183_HDT");
+            Assert::AreEqual((uint16_t)24510u, FrameData.HDG.Heading, L"Test (Full Data), Speed should be 24510");
+        }
+#endif
     };
 }

@@ -150,6 +150,9 @@ NMEA0183_PACKENUM(eNMEA0183_SentencesID, uint32_t)
 #ifdef NMEA0183_DECODE_HDM
   NMEA0183_HDM = NMEA0183_SENTENCE_ID('H', 'D', 'M'), //!< Heading - Magnetic
 #endif
+#ifdef NMEA0183_DECODE_HDT
+  NMEA0183_HDT = NMEA0183_SENTENCE_ID('H', 'D', 'T'), //!< Heading - True
+#endif
 #ifdef NMEA0183_DECODE_RMC
   NMEA0183_RMC = NMEA0183_SENTENCE_ID('R', 'M', 'C'), //!< Recommended minimum specific GNSS data
 #endif
@@ -446,8 +449,19 @@ typedef struct NMEA0183_HDGdata
  */
 typedef struct NMEA0183_HDMdata
 {
-    uint16_t Heading; //!< Magnetic sensor heading, in degree Magnetic (divide by 10^2 to get the real heading)
+    uint16_t Heading; //!< Heading, in degree Magnetic (divide by 10^2 to get the real heading)
 } NMEA0183_HDMdata;
+
+//-----------------------------------------------------------------------------
+
+/*! @brief HDT (Heading - True) sentence fields extraction structure
+ * Format: $--HDT,<Heading:hh.h[h]>,T,<E/W>*<CheckSum>
+ * Actual vessel heading in degrees True produced by any device or system producing true heading.
+ */
+typedef struct NMEA0183_HDTdata
+{
+    uint16_t Heading; //!< Heading, in degree True (divide by 10^2 to get the real heading)
+} NMEA0183_HDTdata;
 
 //-----------------------------------------------------------------------------
 
@@ -571,6 +585,9 @@ typedef struct NMEA0183_DecodedData
 #endif
 #ifdef NMEA0183_DECODE_HDM
     NMEA0183_HDMdata HDM;                   //!< HDM (Heading - Magnetic) extracted. Use if 'SentenceID' = NMEA0183_HDM
+#endif
+#ifdef NMEA0183_DECODE_HDT
+    NMEA0183_HDTdata HDT;                   //!< HDT (Heading - True) extracted. Use if 'SentenceID' = NMEA0183_HDT
 #endif
 #ifdef NMEA0183_DECODE_RMC
     NMEA0183_RMCdata RMC;                   //!< RMC (Recommended Minimum sentence C) extracted. Use if 'SentenceID' = NMEA0183_RMC
