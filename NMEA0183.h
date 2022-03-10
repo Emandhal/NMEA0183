@@ -201,6 +201,17 @@ NMEA0183_UNPACKITEM;
 
 //-----------------------------------------------------------------------------
 
+//! Magnetic sensor structure
+NMEA0183_PACKITEM
+typedef struct __NMEA0183_PACKED__ NMEA0183_Magnetic
+{
+    uint16_t Value; //!< Value of the sensor extracted (divide by 10^2 to get the real value)
+    char Direction; //!< Direction: 'E' = East ; 'W' = West
+} NMEA0183_Magnetic;
+NMEA0183_UNPACKITEM;
+
+//-----------------------------------------------------------------------------
+
 //! Satellite View structure
 typedef struct NMEA0183_SatelliteView
 {
@@ -424,11 +435,7 @@ typedef struct NMEA0183_RMCdata
   uint32_t Speed;                //!< Speed over the ground in knots extracted (divide by 10^4 to get the real speed)
   uint32_t Track;                //!< Track angle in degrees (True) extracted (divide by 10^4 to get the real track)
   NMEA0183_Date Date;            //!< Date extracted
-  struct                         //*** Magnetic variation struct
-  {
-    uint16_t Variation;          //!< Magnetic variation in degrees extracted (divide by 10^2 to get the real variation)
-    char Direction;              //!< 'E' = Easterly variation, subtracts from True course ; 'W' = Westerly variation, adds to True course
-  } Magnetic;
+  NMEA0183_Magnetic Variation;   //!< Magnetic variation in degrees extracted
   char FAAmode;                  //!< FAA mode indicator (NMEA 2.3 and later): ' ' = Not specified in the frame ; 'A' = Autonomous mode ; 'D' = Differential Mode ; 'E' = Estimated (dead-reckoning) mode ; 'M' = Manual Input Mode ; 'S' = Simulated Mode ; 'N' = Data Not Valid
   char NavigationStatus;         //!< Navigational Status (NMEA 4.1 and later): ' ' = Not specified in the frame ; 'S' = Safe ; 'C' = Caution ; 'U' = Unsafe ; 'V' = Void
 } NMEA0183_RMCdata;

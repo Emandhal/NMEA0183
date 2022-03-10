@@ -432,8 +432,8 @@ namespace NMEA0183test
             Assert::AreEqual((uint8_t)0xFF, FrameData.RMC.Date.Day, L"Test (Low Data), Date.Day should be 0xFF");
             Assert::AreEqual((uint8_t)0xFF, FrameData.RMC.Date.Month, L"Test (Low Data), Date.Month should be 0xFF");
             Assert::AreEqual((uint16_t)0xFFFF, FrameData.RMC.Date.Year, L"Test (Low Data), Date.Year should be 0xFFFF");
-            Assert::AreEqual((uint16_t)0xFFFF, FrameData.RMC.Magnetic.Variation, L"Test (Low Data), Magnetic.Variation should be 0xFFFF");
-            Assert::AreEqual(' ', FrameData.RMC.Magnetic.Direction, L"Test (Low Data), Magnetic.Direction should be ' '");
+            Assert::AreEqual((uint16_t)0xFFFF, FrameData.RMC.Variation.Value, L"Test (Low Data), Variation.Value should be 0xFFFF");
+            Assert::AreEqual(' ', FrameData.RMC.Variation.Direction, L"Test (Low Data), Variation.Direction should be ' '");
             Assert::AreEqual('N', FrameData.RMC.FAAmode, L"Test (Low Data), FAAmode should be 'N'");
             Assert::AreEqual(' ', FrameData.RMC.NavigationStatus, L"Test (Low Data), NavigationStatus should be ' '");
 
@@ -466,8 +466,8 @@ namespace NMEA0183test
             Assert::AreEqual((uint8_t)19, FrameData.RMC.Date.Day, L"Test (Full Data), Date.Day should be 19");
             Assert::AreEqual((uint8_t)11, FrameData.RMC.Date.Month, L"Test (Full Data), Date.Month should be 11");
             Assert::AreEqual((uint16_t)94, FrameData.RMC.Date.Year, L"Test (Full Data), Date.Year should be 94");
-            Assert::AreEqual((uint16_t)2030, FrameData.RMC.Magnetic.Variation, L"Test (Full Data), Magnetic.Variation should be 2030");
-            Assert::AreEqual('E', FrameData.RMC.Magnetic.Direction, L"Test (Full Data), Magnetic.Direction should be 'E'");
+            Assert::AreEqual((uint16_t)2030, FrameData.RMC.Variation.Value, L"Test (Full Data), Variation.Value should be 2030");
+            Assert::AreEqual('E', FrameData.RMC.Variation.Direction, L"Test (Full Data), Variation.Direction should be 'E'");
             Assert::AreEqual('A', FrameData.RMC.FAAmode, L"Test (Full Data), FAAmode should be 'A'");
             Assert::AreEqual('S', FrameData.RMC.NavigationStatus, L"Test (Full Data), NavigationStatus should be 'S'");
         }

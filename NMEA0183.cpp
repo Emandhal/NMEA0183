@@ -692,13 +692,13 @@ static eERRORRESULT NMEA0183_ProcessRMC(const char* pSentence, NMEA0183_RMCdata*
   NMEA0183_CHECK_FIELD_DELIMITER;
 
   //--- Get Magnetic Variation ---
-  pData->Magnetic.Variation = (uint16_t)__NMEA0183_StringToInt(&pStr, 0, 2); //*** Get track <vv.v[v]> (divide by 10^2 to get the real magnetic variation)
+  pData->Variation.Value = (uint16_t)__NMEA0183_StringToInt(&pStr, 0, 2); //*** Get track <vv.v[v]> (divide by 10^2 to get the real magnetic variation)
   NMEA0183_CHECK_FIELD_DELIMITER;
   if (*pStr != NMEA0183_FIELD_DELIMITER)
   {
-    pData->Magnetic.Direction = *pStr;                               //*** Get magnetic variation direction <E/W>
+    pData->Variation.Direction = *pStr;                              //*** Get magnetic variation direction <E/W>
     ++pStr;                                                          // Parsing: Skip <E/W>
-  } else pData->Magnetic.Direction = ' ';                            //*** Set magnetic variation direction not specified
+  } else pData->Variation.Direction = ' ';                           //*** Set magnetic variation direction not specified
 
   if (*pStr == NMEA0183_FIELD_DELIMITER)
   {
