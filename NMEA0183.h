@@ -436,7 +436,7 @@ typedef struct NMEA0183_GSVdata
  */
 typedef struct NMEA0183_HDGdata
 {
-  uint16_t Heading;            //!< Magnetic sensor heading, in degree (divide by 10^2 to get the real heading)
+  uint16_t Heading;            //!< Heading, in degree (divide by 10^2 to get the real heading)
   NMEA0183_Magnetic Deviation; //!< Magnetic deviation in degrees extracted
   NMEA0183_Magnetic Variation; //!< Magnetic variation in degrees extracted
 } NMEA0183_HDGdata;

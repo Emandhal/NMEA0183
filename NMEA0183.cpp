@@ -699,7 +699,7 @@ static eERRORRESULT NMEA0183_ProcessHDG(const char* pSentence, NMEA0183_HDGdata*
 
 #ifdef NMEA0183_DECODE_HDM
 //=============================================================================
-// Process the HDM (Heading - Deviation and Variation) sentence
+// Process the HDM (Heading - Magnetic) sentence
 //=============================================================================
 static eERRORRESULT NMEA0183_ProcessHDM(const char* pSentence, NMEA0183_HDMdata* pData)
 { // Format: $--HDM,<Heading:hh.h[h]>,M,<E/W>*<CheckSum>
