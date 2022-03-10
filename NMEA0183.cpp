@@ -766,6 +766,44 @@ static eERRORRESULT NMEA0183_ProcessTXT(const char* pSentence, NMEA0183_TXTdata*
 
 
 
+#ifdef NMEA0183_DECODE_VHW
+//=============================================================================
+// Process the VHW (Water Speed and Heading) sentence
+//=============================================================================
+static eERRORRESULT NMEA0183_ProcessVHW(const char* pSentence, NMEA0183_VHWdata* pData)
+{ // Format: $--VHW,<CourseTrue:t.t[t][t][t]>,T,<CourseMag:m.m[m][m][m]>,M,<SpeedKnots:k.k[k][k][k]>,N,<SpeedKmHr:h.h[h][h][h]>,K*<CheckSum>
+    char* pStr = (char*)pSentence;
+
+    //--- Get Heading ---
+    pData->HeadingTrue = (uint32_t)__NMEA0183_StringToInt(&pStr, 0, 4);     //*** Get heading in degrees True <ttt.t[t][t][t]> (divide by 10^4 to get the real track)
+    NMEA0183_CHECK_FIELD_DELIMITER;
+    if (*pStr != 'T') return ERR__PARSE_ERROR;                              // Parsing: Should be 'T'
+    ++pStr;                                                                 // Parsing: Skip 'T'
+    NMEA0183_CHECK_FIELD_DELIMITER;
+    pData->HeadingMagnetic = (uint32_t)__NMEA0183_StringToInt(&pStr, 0, 4); //*** Get heading in degrees Magnetic <mmm.m[m][m][m]> (divide by 10^4 to get the real track)
+    NMEA0183_CHECK_FIELD_DELIMITER;
+    if (*pStr != 'M') return ERR__PARSE_ERROR;                              // Parsing: Should be 'M'
+    ++pStr;                                                                 // Parsing: Skip 'M'
+    NMEA0183_CHECK_FIELD_DELIMITER;
+
+    //--- Get Speed ---
+    pData->SpeedKnots = (uint32_t)__NMEA0183_StringToInt(&pStr, 0, 4);      //*** Get speed over the ground in knots <kkk.k[k][k][k]> (divide by 10^4 to get the real track)
+    NMEA0183_CHECK_FIELD_DELIMITER;
+    if (*pStr != 'N') return ERR__PARSE_ERROR;                              // Parsing: Should be 'N'
+    ++pStr;                                                                 // Parsing: Skip 'N'
+    NMEA0183_CHECK_FIELD_DELIMITER;
+    pData->SpeedKmHr = (uint32_t)__NMEA0183_StringToInt(&pStr, 0, 4);       //*** Get speed over the ground in km/hr <hhh.h[h][h][h]> (divide by 10^4 to get the real track)
+    NMEA0183_CHECK_FIELD_DELIMITER;
+    if (*pStr != 'K') return ERR__PARSE_ERROR;                              // Parsing: Should be 'K'
+    ++pStr;                                                                 // Parsing: Skip 'K'
+
+    if (*pStr != NMEA0183_CHECKSUM_DELIMITER) return ERR__PARSE_ERROR;      // Should be a '*'
+    return ERR_OK;
+}
+#endif
+
+
+
 #ifdef NMEA0183_DECODE_VTG
 //=============================================================================
 // Process the VTG (Course Over Ground and Ground Speed) sentence
@@ -921,6 +959,9 @@ eERRORRESULT NMEA0183_ProcessFrame(NMEA0183_DecodeInput* pDecoder, NMEA0183_Deco
 #endif
 #ifdef NMEA0183_DECODE_RMC
     case NMEA0183_RMC: Error = NMEA0183_ProcessRMC(pRaw, &pData->RMC); break;
+#endif
+#ifdef NMEA0183_DECODE_VHW
+    case NMEA0183_VHW: Error = NMEA0183_ProcessVHW(pRaw, &pData->VHW); break;
 #endif
 #ifdef NMEA0183_DECODE_VTG
     case NMEA0183_VTG: Error = NMEA0183_ProcessVTG(pRaw, &pData->VTG); break;

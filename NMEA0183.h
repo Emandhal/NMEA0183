@@ -150,6 +150,9 @@ NMEA0183_PACKENUM(eNMEA0183_SentencesID, uint32_t)
 #ifdef NMEA0183_DECODE_TXT
   NMEA0183_TXT = NMEA0183_SENTENCE_ID('T', 'X', 'T'), //!< Texte message
 #endif
+#ifdef NMEA0183_DECODE_VHW
+  NMEA0183_VHW = NMEA0183_SENTENCE_ID('V', 'H', 'W'), //!< Water Speed and Heading
+#endif
 #ifdef NMEA0183_DECODE_VTG
   NMEA0183_VTG = NMEA0183_SENTENCE_ID('V', 'T', 'G'), //!< Course Over Ground and Ground Speed
 #endif
@@ -448,6 +451,20 @@ typedef struct NMEA0183_TXTdata
 
 //-----------------------------------------------------------------------------
 
+/*! @brief VHW (Water Speed and Heading) sentence fields extraction structure
+ * Format: $--VHW,<CourseTrue:t.t[t][t][t]>,T,<CourseMag:m.m[m][m][m]>,M,<SpeedKnots:k.k[k][k][k]>,N,<SpeedKmHr:h.h[h][h][h]>,K*<CheckSum>
+ * The compass heading to which the vessel points and the speed of the vessel relative to the water
+ */
+typedef struct NMEA0183_VHWdata
+{
+    uint32_t HeadingTrue;     //!< Heading, degrees True (000.0000 to 359.0000) extracted (divide by 10^4 to get the real course)
+    uint32_t HeadingMagnetic; //!< Heading, degrees Magnetic (000.0000 to 359.0000) extracted (divide by 10^4 to get the real course)
+    uint32_t SpeedKnots;      //!< Speed over the ground in knots (000.0000 to 999.9999) extracted (divide by 10^4 to get the real speed)
+    uint32_t SpeedKmHr;       //!< Speed over the ground in km/hr (000.0000 to 999.9999) extracted (divide by 10^4 to get the real speed)
+} NMEA0183_VHWdata;
+
+//-----------------------------------------------------------------------------
+
 /*! @brief VTG (Course Over Ground and Ground Speed) sentence fields extraction structure
  * Format: $--VTG,<CourseTrue:t.t[t][t][t]>[,T],<CourseMag:m.m[m][m][m]>[,M],<SpeedKnots:k.k[k][k][k]>[,N],<SpeedKmHr:h.h[h][h][h]>[,K][,<FAA:A/D/E/M/S/N>]*<CheckSum>
  * The actual course and speed relative to the ground
@@ -517,6 +534,9 @@ typedef struct NMEA0183_DecodedData
 #endif
 #ifdef NMEA0183_DECODE_TXT
     NMEA0183_TXTdata TXT;                   //!< TXT (Text Transmission) extracted. Use if 'SentenceID' = NMEA0183_TXT
+#endif
+#ifdef NMEA0183_DECODE_VHW
+    NMEA0183_VHWdata VHW;                   //!< VHW (Water Speed and Heading) extracted. Use if 'SentenceID' = NMEA0183_VHW
 #endif
 #ifdef NMEA0183_DECODE_VTG
     NMEA0183_VTGdata VTG;                   //!< VTG (Course Over Ground and Ground Speed) extracted. Use if 'SentenceID' = NMEA0183_VTG

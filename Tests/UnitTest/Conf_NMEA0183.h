@@ -97,6 +97,7 @@
 // Others sentences
 //=============================================================================
 #define NMEA0183_DECODE_TXT
+#define NMEA0183_DECODE_VHW
 #define NMEA0183_DECODE_ZDA
 
 

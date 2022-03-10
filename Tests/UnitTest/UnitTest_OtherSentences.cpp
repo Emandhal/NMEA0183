@@ -53,6 +53,34 @@ namespace NMEA0183test
         }
 #endif
 
+#ifdef NMEA0183_DECODE_VHW
+        TEST_METHOD(TestMethod_VHW)
+        {
+            NMEA0183decoder NMEA;
+            NMEA0183_DecodedData FrameData;
+            eNMEA0183_State CurrentState;
+            eERRORRESULT LastError = ERR_OK;
+
+            //=== Test (Full Data) ============================================
+            const char* const TEST_VHW_FULL_DATA_FRAME = "$IIVHW,245.1,T,243.8,M,047.01,N,087.04,K*53\r\n";
+            for (size_t z = 0; z < strlen(TEST_VHW_FULL_DATA_FRAME); ++z) (void)NMEA.AddReceivedCharacter(TEST_VHW_FULL_DATA_FRAME[z]);
+            CurrentState = NMEA.GetDecoderState();
+            Assert::AreEqual(NMEA0183_TO_PROCESS, CurrentState, L"Test (Full Data), state should be NMEA0183_TO_PROCESS");
+            LastError = NMEA.ProcessFrame(&FrameData);
+            Assert::AreEqual(ERR_OK, LastError, L"Test (Full Data), error should be ERR_OK");
+            CurrentState = NMEA.GetDecoderState();
+            Assert::AreEqual(NMEA0183_WAIT_START, CurrentState, L"Test (Full Data), state should be NMEA0183_WAIT_START");
+            //--- Test data ---
+            Assert::AreEqual(true, FrameData.ParseIsValid, L"Test (Full Data), ParseIsValid should be true");
+            Assert::AreEqual((eNMEA0183_TalkerID)NMEA0183_TALKER_ID('I', 'I'), FrameData.TalkerID, L"Test (Full Data), TalkerID should be NMEA0183_II");
+            Assert::AreEqual(NMEA0183_VHW, FrameData.SentenceID, L"Test (Full Data), SentenceID should be NMEA0183_VHW");
+            Assert::AreEqual((uint32_t)2451000u, FrameData.VHW.HeadingTrue, L"Test (Full Data), CourseTrue should be 2451000");
+            Assert::AreEqual((uint32_t)2438000u, FrameData.VHW.HeadingMagnetic, L"Test (Full Data), CourseMagnetic should be 2438000");
+            Assert::AreEqual((uint32_t)470100u, FrameData.VHW.SpeedKnots, L"Test (Full Data), SpeedKnots should be 470100");
+            Assert::AreEqual((uint32_t)870400u, FrameData.VHW.SpeedKmHr, L"Test (Full Data), SpeedKmHr should be 870400");
+        }
+#endif
+
 #ifdef NMEA0183_DECODE_ZDA
         TEST_METHOD(TestMethod_ZDA)
         {
