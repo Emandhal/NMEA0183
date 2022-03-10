@@ -666,7 +666,7 @@ static eERRORRESULT NMEA0183_ProcessHDG(const char* pSentence, NMEA0183_HDGdata*
   char* pStr = (char*)pSentence;
 
   //--- Get Heading ---
-  pData->Heading = (uint32_t)__NMEA0183_StringToInt(&pStr, 0, 2);    //*** Get and save heading <hh.h[h]> (divide by 10^2 to get the real minute)
+  pData->Heading = (uint32_t)__NMEA0183_StringToInt(&pStr, 0, 2);    //*** Get and save heading <hh.h[h]> (divide by 10^2 to get the real heading)
   NMEA0183_CHECK_FIELD_DELIMITER;
 
   //--- Get Magnetic Deviation ---
@@ -692,6 +692,27 @@ static eERRORRESULT NMEA0183_ProcessHDG(const char* pSentence, NMEA0183_HDGdata*
 
   if (*pStr != NMEA0183_CHECKSUM_DELIMITER) return ERR__PARSE_ERROR; // Should be a '*'
   return ERR_OK;
+}
+#endif
+
+
+
+#ifdef NMEA0183_DECODE_HDM
+//=============================================================================
+// Process the HDM (Heading - Deviation and Variation) sentence
+//=============================================================================
+static eERRORRESULT NMEA0183_ProcessHDM(const char* pSentence, NMEA0183_HDMdata* pData)
+{ // Format: $--HDM,<Heading:hh.h[h]>,M,<E/W>*<CheckSum>
+    char* pStr = (char*)pSentence;
+
+    //--- Get Heading ---
+    pData->Heading = (uint32_t)__NMEA0183_StringToInt(&pStr, 0, 2);    //*** Get and save heading <hh.h[h]> (divide by 10^2 to get the real heading)
+    NMEA0183_CHECK_FIELD_DELIMITER;
+    if (*pStr != 'M') return ERR__PARSE_ERROR;                         // Parsing: Should be 'M'
+    ++pStr;
+
+    if (*pStr != NMEA0183_CHECKSUM_DELIMITER) return ERR__PARSE_ERROR; // Should be a '*'
+    return ERR_OK;
 }
 #endif
 
@@ -999,6 +1020,9 @@ eERRORRESULT NMEA0183_ProcessFrame(NMEA0183_DecodeInput* pDecoder, NMEA0183_Deco
 #endif
 #ifdef NMEA0183_DECODE_HDG
     case NMEA0183_HDG: Error = NMEA0183_ProcessHDG(pRaw, &pData->HDG); break;
+#endif
+#ifdef NMEA0183_DECODE_HDM
+    case NMEA0183_HDM: Error = NMEA0183_ProcessHDM(pRaw, &pData->HDM); break;
 #endif
 #ifdef NMEA0183_DECODE_RMC
     case NMEA0183_RMC: Error = NMEA0183_ProcessRMC(pRaw, &pData->RMC); break;

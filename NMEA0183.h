@@ -147,6 +147,9 @@ NMEA0183_PACKENUM(eNMEA0183_SentencesID, uint32_t)
 #ifdef NMEA0183_DECODE_HDG
   NMEA0183_HDG = NMEA0183_SENTENCE_ID('H', 'D', 'G'), //!< Heading, Deviation & Variation
 #endif
+#ifdef NMEA0183_DECODE_HDM
+  NMEA0183_HDM = NMEA0183_SENTENCE_ID('H', 'D', 'M'), //!< Heading - Magnetic
+#endif
 #ifdef NMEA0183_DECODE_RMC
   NMEA0183_RMC = NMEA0183_SENTENCE_ID('R', 'M', 'C'), //!< Recommended minimum specific GNSS data
 #endif
@@ -437,6 +440,17 @@ typedef struct NMEA0183_HDGdata
 
 //-----------------------------------------------------------------------------
 
+/*! @brief HDM (Heading - Magnetic) sentence fields extraction structure
+ * Format: $--HDM,<Heading:hh.h[h]>,M,<E/W>*<CheckSum>
+ * Actual vessel heading in degrees Magnetic produced by any device or system producing magnetic heading.
+ */
+typedef struct NMEA0183_HDMdata
+{
+    uint16_t Heading; //!< Magnetic sensor heading, in degree Magnetic (divide by 10^2 to get the real heading)
+} NMEA0183_HDMdata;
+
+//-----------------------------------------------------------------------------
+
 /*! @brief RMC (Recommended Minimum sentence C) sentence fields extraction structure
  * Format: $--RMC,<hhmmss.zzz>,<Status:A/V>,<Latitude:ddmm.mmmm[m][m][m]>,<N/S>,<Longitude:dddmm.mmmm[m][m][m]>,<E/W>,<Speed:sss.ss[s][s]>,<Track:ttt.tt[t][t]>,<ddmmyy>,<MagVar:vv.v[v]>,<E/W>[,<FAA:A/D/E/M/S/N>][,<NavStatus:S/C/U/V>]*<CheckSum>
  * Time, date, position, course and speed data provided by a GNSS navigation receiver. This sentence is transmitted at intervals not exceeding 2-seconds and is always accompanied by RMB when a destination waypoint is active.
@@ -554,6 +568,9 @@ typedef struct NMEA0183_DecodedData
 #endif
 #ifdef NMEA0183_DECODE_HDG
     NMEA0183_HDGdata HDG;                   //!< HDG (Heading - Deviation and Variation) extracted. Use if 'SentenceID' = NMEA0183_HDG
+#endif
+#ifdef NMEA0183_DECODE_HDM
+    NMEA0183_HDMdata HDM;                   //!< HDM (Heading - Magnetic) extracted. Use if 'SentenceID' = NMEA0183_HDM
 #endif
 #ifdef NMEA0183_DECODE_RMC
     NMEA0183_RMCdata RMC;                   //!< RMC (Recommended Minimum sentence C) extracted. Use if 'SentenceID' = NMEA0183_RMC
