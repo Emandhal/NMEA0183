@@ -129,6 +129,9 @@ NMEA0183_PACKENUM(eNMEA0183_SentencesID, uint32_t)
 #ifdef NMEA0183_DECODE_ALM
   NMEA0183_ALM = NMEA0183_SENTENCE_ID('A', 'L', 'M'), //!< GPS Almanac Data
 #endif
+#ifdef NMEA0183_DECODE_APB
+  NMEA0183_APB = NMEA0183_SENTENCE_ID('A', 'P', 'B'), //!< Heading/Track Controller (Autopilot) Sentence "B"
+#endif
 #ifdef NMEA0183_DECODE_GGA
   NMEA0183_GGA = NMEA0183_SENTENCE_ID('G', 'G', 'A'), //!< Global positioning system fixed data
 #endif
@@ -306,6 +309,34 @@ typedef enum
 
 //-----------------------------------------------------------------------------
 
+#define NMEA0183_APB_WAYPOINT_ID_MAX_SIZE  ( 10 ) //! ASCII characters + 0 terminal
+
+/*! @brief APB (Heading/Track Controller (Autopilot) Sentence "B") sentence fields extraction structure
+ * Format: $--APB,<Status:A/V>,<Status:A/V>,<Magnitude:m.m[m][m][m]>,<L/R>,<N/K>,<A/V>,<A/V>,<BOtoD:b[.b][b]>,<M/T>,<WaypointID>,<BCPtoD:c[.c][c]>,<M/T>,<H2StoD:h[.h][h]>,<M/T>,<FAA:A/D/E/M/S/N>*<CheckSum>
+ * Commonly used by autopilots, this sentence contains navigation receiver warning flag status, cross-trackerror, waypoint arrival status, initial bearing from origin waypoint to the destination,
+ * continuous bearing from present position to destination and recommended heading-to-steer to destination waypoint for the active navigation leg of the journey.
+ */
+typedef struct NMEA0183_APBdata
+{
+  char Status1;                  //!< Status of the frame: 'A' = Data valid ; 'V' = Loran-C Blink or SNR warning ; 'V' = General warning flag for other navigation systems when a reliable fix is not available
+  char Status2;                  //!< Status of the frame: 'A' = Data valid or not used ; 'V' = Loran-C Cycle Lock warning flag
+  int32_t MagnitudeXTE;          //!< Magnitude of XTE (cross-track-error), see XTEunit for the unit (divide by 10^4 to get the real error magnitude)
+  char DirectionSteer;           //!< Direction to steer: 'L' = Left ; 'R' = Right
+  char XTEunit;                  //!< XTE units: 'N' = nautical miles ; 'K' = kilometers
+  char ArrivalStatus;            //!< Status of arrival: 'A' = arrival circle entered ; 'V' = arrival circle not entered
+  char PassedWaypoint;           //!< Status of the passed waypoint: 'A' = arrival circle entered ; 'V' = arrival circle not entered
+  uint16_t BearingOriginToDest;  //!< Bearing origin to destination, see BearingOtoDunit for the unit (divide by 10^2 to get the real bearing origin to destination)
+  char BearingOtoDunit;          //!< Bearing origin to destination unit: 'M' = magnetic ; 'T' = true
+  char WaypointID[NMEA0183_APB_WAYPOINT_ID_MAX_SIZE]; //!< Destination waypoint ID
+  uint16_t BearingCurPosToDest;  //!< Bearing present position to destination, see BearingCPtoDunit for the unit (divide by 10^2 to get the real Bearing, present position to destination)
+  char BearingCPtoDunit;         //!< Bearing present position to destination unit: 'M' = magnetic ; 'T' = true
+  uint16_t HeadingToSteerToDest; //!< Heading-to-steer to destination waypoint, see H2StoDunit for the unit (divide by 10^2 to get the real heading-to-steer to destination waypoint)
+  char H2StoDunit;               //!< Heading-to-steer to destination waypoint unit: 'M' = magnetic ; 'T' = true
+  char FAAmode;                  //!< FAA mode indicator (NMEA 3.0 and later): ' ' = Not specified in the frame ; 'A' = Autonomous mode ; 'D' = Differential Mode ; 'E' = Estimated (dead-reckoning) mode ; 'M' = Manual Input Mode ; 'S' = Simulated Mode ; 'N' = Data Not Valid
+} NMEA0183_APBdata;
+
+//-----------------------------------------------------------------------------
+
 /*! @brief GGA (Global positioning system fixed data) sentence fields extraction structure
  * Format: $--GGA,<hhmmss.zzz>,<Latitude:ddmm.mmmm[m][m][m]>,<N/S>,<Longitude:dddmm.mmmm[m][m][m]>,<E/W>,<GPSquality:0/1/2/3/4/5/6/7/8>,<SatUsed:ss>,<HDOP:h.h(h)>,<Altitude:(-)aaa.a[a]>,M,<GeoidSep:(-)gg.g[g]>,M,<AgeDiff:cc.c[c]>,<DiffRef:rrrr>*<CheckSum>
  * Time, position and fix related data for a GPS receiver
@@ -465,6 +496,9 @@ typedef struct NMEA0183_DecodedData
 #endif
 #ifdef NMEA0183_DECODE_ALM
     NMEA0183_ALMdata ALM;                   //!< ALM (GPS Almanac Data) extracted. Use if 'SentenceID' = NMEA0183_ALM
+#endif
+#ifdef NMEA0183_DECODE_APB
+    NMEA0183_APBdata APB;                   //!< APB (Heading/Track Controller (Autopilot) Sentence "B") extracted. Use if 'SentenceID' = NMEA0183_APB
 #endif
 #ifdef NMEA0183_DECODE_GGA
     NMEA0183_GGAdata GGA;                   //!< GGA (Global positioning system fixed data) extracted. Use if 'SentenceID' = NMEA0183_GGA

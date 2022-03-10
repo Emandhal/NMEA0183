@@ -397,6 +397,87 @@ static eERRORRESULT NMEA0183_ProcessALM(const char* pSentence, NMEA0183_ALMdata*
 
 
 
+#ifdef NMEA0183_DECODE_APB
+//=============================================================================
+// Process the APB (Heading/Track Controller (Autopilot) Sentence "B") sentence
+//=============================================================================
+static eERRORRESULT NMEA0183_ProcessAPB(const char* pSentence, NMEA0183_APBdata* pData)
+{ // Format: $--APB,<Status:A/V>,<Status:A/V>,<Magnitude:m.m[m][m][m]>,<L/R>,<N/K>,<A/V>,<A/V>,<BOtoD:b[.b][b]>,<M/T>,<WaypointID>,<BCPtoD:c[.c][c]>,<M/T>,<H2StoD:h[.h][h]>,<M/T>,<FAA:A/D/E/M/S/N>*<CheckSum>
+  char* pStr = (char*)pSentence;
+
+  //--- Get Status ---
+  pData->Status1 = *pStr;                                             //*** Get status1 <A/V>
+  ++pStr;                                                             // Parsing: Skip <A/V>
+  NMEA0183_CHECK_FIELD_DELIMITER;
+  pData->Status2 = *pStr;                                             //*** Get status2 <A/V>
+  ++pStr;                                                             // Parsing: Skip <A/V>
+  NMEA0183_CHECK_FIELD_DELIMITER;
+
+  //--- Get magnitude of XTE ---
+  pData->MagnitudeXTE = (int32_t)__NMEA0183_StringToInt(&pStr, 0, 4); //*** Get magnitude of XTE (cross-track-error) <m.m[m][m][m]> (divide by 10^4 to get the real magnitude of XTE)
+  NMEA0183_CHECK_FIELD_DELIMITER;
+  pData->DirectionSteer = *pStr;                                      //*** Get direction to steer <L/R>
+  ++pStr;                                                             // Parsing: Skip <L/R>
+  NMEA0183_CHECK_FIELD_DELIMITER;
+  pData->XTEunit = *pStr;                                             //*** Get XTE unit <N/K>
+  ++pStr;                                                             // Parsing: Skip <N/K>
+  NMEA0183_CHECK_FIELD_DELIMITER;
+
+  //--- Get Status ---
+  pData->ArrivalStatus = *pStr;                                       //*** Get status of arrival: 'A' = arrival circle entered ; 'V' = arrival circle not entered
+  ++pStr;                                                             // Parsing: Skip <A/V>
+  NMEA0183_CHECK_FIELD_DELIMITER;
+  pData->PassedWaypoint = *pStr;                                      //*** Get status of the passed waypoint: 'A' = arrival circle entered ; 'V' = arrival circle not entered
+  ++pStr;                                                             // Parsing: Skip <A/V>
+  NMEA0183_CHECK_FIELD_DELIMITER;
+
+  //--- Get Bearing origin ---
+  pData->BearingOriginToDest = (uint16_t)__NMEA0183_StringToInt(&pStr, 0, 2); //*** Get bearing origin to destination <b[.b][b]> (divide by 10^2 to get the real bearing origin to destination)
+  NMEA0183_CHECK_FIELD_DELIMITER;
+  pData->BearingOtoDunit = *pStr;                                     //*** Get bearing origin to destination unit: 'M' = magnetic ; 'T' = true
+  ++pStr;                                                             // Parsing: Skip <M/T>
+  NMEA0183_CHECK_FIELD_DELIMITER;
+
+  //--- Get Waypoint ID ---
+  size_t TxtPos = 0;
+  while (TxtPos < (NMEA0183_APB_WAYPOINT_ID_MAX_SIZE - 1))
+  {
+      if ((*pStr == '\0') || (*pStr == NMEA0183_FIELD_DELIMITER)) break;
+      pData->WaypointID[TxtPos] = *pStr;                             //*** Get char
+      ++TxtPos;
+      ++pStr;
+  }
+  pData->WaypointID[TxtPos] = '\0';
+  NMEA0183_CHECK_FIELD_DELIMITER;
+
+  //--- Get Bearing current position ---
+  pData->BearingCurPosToDest = (uint16_t)__NMEA0183_StringToInt(&pStr, 0, 2); //*** Get bearing present position to destination <c[.c][c]> (divide by 10^2 to get the real bearing origin to destination)
+  NMEA0183_CHECK_FIELD_DELIMITER;
+  pData->BearingCPtoDunit = *pStr;                                   //*** Get bearing present position to destination unit: 'M' = magnetic ; 'T' = true
+  ++pStr;                                                            // Parsing: Skip <M/T>
+  NMEA0183_CHECK_FIELD_DELIMITER;
+
+  //--- Get Heading to steer ---
+  pData->HeadingToSteerToDest = (uint16_t)__NMEA0183_StringToInt(&pStr, 0, 2); //*** Get heading-to-steer to destination waypoint <h[.h][h]> (divide by 10^2 to get the real bearing origin to destination)
+  NMEA0183_CHECK_FIELD_DELIMITER;
+  pData->H2StoDunit = *pStr;                                         //*** Get heading-to-steer to destination waypoint unit: 'M' = magnetic ; 'T' = true
+  ++pStr;                                                            // Parsing: Skip <M/T>
+
+  if (*pStr == NMEA0183_FIELD_DELIMITER)
+  {
+    //--- Get FAA mode (if available) ---
+    ++pStr;                                                          // Parsing: Skip ','
+    pData->FAAmode = *pStr;                                          //*** Get FAA mode <A/D/E/M/S/N>
+    ++pStr;                                                          // Parsing: Skip <A/D/E/M/S/N>
+  }
+  else pData->FAAmode = ' ';                                         //*** Set FAA mode not specified
+  if (*pStr != NMEA0183_CHECKSUM_DELIMITER) return ERR__PARSE_ERROR; // Should be a '*'
+  return ERR_OK;
+}
+#endif
+
+
+
 #ifdef NMEA0183_DECODE_GGA
 //=============================================================================
 // Process the GGA (Global positioning system fixed data) sentence
@@ -822,6 +903,9 @@ eERRORRESULT NMEA0183_ProcessFrame(NMEA0183_DecodeInput* pDecoder, NMEA0183_Deco
 #endif
 #ifdef NMEA0183_DECODE_ALM
     case NMEA0183_ALM: Error = NMEA0183_ProcessALM(pRaw, &pData->ALM); break;
+#endif
+#ifdef NMEA0183_DECODE_APB
+    case NMEA0183_APB: Error = NMEA0183_ProcessAPB(pRaw, &pData->APB); break;
 #endif
 #ifdef NMEA0183_DECODE_GGA
     case NMEA0183_GGA: Error = NMEA0183_ProcessGGA(pRaw, &pData->GGA); break;
