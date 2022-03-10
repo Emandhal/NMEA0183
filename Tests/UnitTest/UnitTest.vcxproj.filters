@@ -39,9 +39,6 @@
     <ClCompile Include="UnitTest_CompassSentences.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="UnitTest_DGPSSentences.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="UnitTest_EchoSounderSentences.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>

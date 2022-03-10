@@ -326,7 +326,7 @@ static eERRORRESULT NMEA0183_ProcessAAM(const char* pSentence, NMEA0183_AAMdata*
   ++pStr;                                                              // Parsing: Skip 'N'
   NMEA0183_CHECK_FIELD_DELIMITER;
 
-  //--- Get text of the message ---
+  //--- Get Waypoint ID ---
   size_t TxtPos = 0;
   while (TxtPos < (NMEA0183_AAM_WAYPOINT_ID_MAX_SIZE-1))
   {
@@ -690,7 +690,7 @@ static eERRORRESULT NMEA0183_ProcessTXT(const char* pSentence, NMEA0183_TXTdata*
 // Process the VTG (Course Over Ground and Ground Speed) sentence
 //=============================================================================
 static eERRORRESULT NMEA0183_ProcessVTG(const char* pSentence, NMEA0183_VTGdata* pData)
-{ // Format: $--VTG,<Course�True:t.t[t][t][t]>[,T],<Course�Mag:m.m[m][m][m]>[,M],<SpeedKnots:k.k[k][k][k]>[,N],<SpeedKmHr:h.h[h][h][h]>[,K][,<FAA:A/D/E/M/S/N>]*<CheckSum>
+{ // Format: $--VTG,<CourseTrue:t.t[t][t][t]>[,T],<CourseMag:m.m[m][m][m]>[,M],<SpeedKnots:k.k[k][k][k]>[,N],<SpeedKmHr:h.h[h][h][h]>[,K][,<FAA:A/D/E/M/S/N>]*<CheckSum>
   char* pStr = (char*)pSentence;
 
   //--- Get Course ---

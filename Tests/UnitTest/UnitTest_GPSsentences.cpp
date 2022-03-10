@@ -36,8 +36,8 @@ namespace NMEA0183test
             eERRORRESULT LastError = ERR_OK;
 
             //=== Test (Low Data) ============================================
-            const char* const TEST_GGA_LOW_DATA_FRAME = "$GPAAM,V,V,0.2,N,*14\r\n";
-            for (size_t z = 0; z < strlen(TEST_GGA_LOW_DATA_FRAME); ++z) (void)NMEA.AddReceivedCharacter(TEST_GGA_LOW_DATA_FRAME[z]);
+            const char* const TEST_AAM_LOW_DATA_FRAME = "$GPAAM,V,V,0.2,N,*14\r\n";
+            for (size_t z = 0; z < strlen(TEST_AAM_LOW_DATA_FRAME); ++z) (void)NMEA.AddReceivedCharacter(TEST_AAM_LOW_DATA_FRAME[z]);
             CurrentState = NMEA.GetDecoderState();
             Assert::AreEqual(NMEA0183_TO_PROCESS, CurrentState, L"Test (Low Data), state should be NMEA0183_TO_PROCESS");
             LastError = NMEA.ProcessFrame(&FrameData);
@@ -82,8 +82,8 @@ namespace NMEA0183test
             eERRORRESULT LastError = ERR_OK;
 
             //=== Test (Full Data) ===========================================
-            const char* const TEST_AAM_FULL_DATA_FRAME = "$GPALM,1,1,15,1159,74,441d,4e,16be,fd5e,a10c9f,4a2da4,686e81,a8cbe1,0a4,401*24\r\n";
-            for (size_t z = 0; z < strlen(TEST_AAM_FULL_DATA_FRAME); ++z) (void)NMEA.AddReceivedCharacter(TEST_AAM_FULL_DATA_FRAME[z]);
+            const char* const TEST_ALM_FULL_DATA_FRAME = "$GPALM,1,1,15,1159,74,441d,4e,16be,fd5e,a10c9f,4a2da4,686e81,a8cbe1,0a4,401*24\r\n";
+            for (size_t z = 0; z < strlen(TEST_ALM_FULL_DATA_FRAME); ++z) (void)NMEA.AddReceivedCharacter(TEST_ALM_FULL_DATA_FRAME[z]);
             CurrentState = NMEA.GetDecoderState();
             Assert::AreEqual(NMEA0183_TO_PROCESS, CurrentState, L"Test (Full Data), state should be NMEA0183_TO_PROCESS");
             LastError = NMEA.ProcessFrame(&FrameData);

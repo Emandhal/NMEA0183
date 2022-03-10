@@ -418,7 +418,7 @@ typedef struct NMEA0183_TXTdata
 //-----------------------------------------------------------------------------
 
 /*! @brief VTG (Course Over Ground and Ground Speed) sentence fields extraction structure
- * Format: $--VTG,<Course�True:t.t[t][t][t]>[,T],<Course�Mag:m.m[m][m][m]>[,M],<SpeedKnots:k.k[k][k][k]>[,N],<SpeedKmHr:h.h[h][h][h]>[,K][,<FAA:A/D/E/M/S/N>]*<CheckSum>
+ * Format: $--VTG,<CourseTrue:t.t[t][t][t]>[,T],<CourseMag:m.m[m][m][m]>[,M],<SpeedKnots:k.k[k][k][k]>[,N],<SpeedKmHr:h.h[h][h][h]>[,K][,<FAA:A/D/E/M/S/N>]*<CheckSum>
  * The actual course and speed relative to the ground
  */
 typedef struct NMEA0183_VTGdata
@@ -440,7 +440,7 @@ typedef struct NMEA0183_ZDAdata
 {
   NMEA0183_Time Time;      //!< Time extracted
   NMEA0183_Date Date;      //!< Date extracted
-  int8_t LocalZoneHour;    //!< Local zone hours (00 to �13)
+  int8_t LocalZoneHour;    //!< Local zone hours (00 to +/-13)
   uint8_t LocalZoneMinute; //!< Local Zone Minutes (00 to 59)
 } NMEA0183_ZDAdata;
 

@@ -173,7 +173,6 @@
     <ClCompile Include="UnitTest_AutopilotSentences.cpp" />
     <ClCompile Include="UnitTest_CommunicationsSentences.cpp" />
     <ClCompile Include="UnitTest_CompassSentences.cpp" />
-    <ClCompile Include="UnitTest_DGPSSentences.cpp" />
     <ClCompile Include="UnitTest_EchoSounderSentences.cpp" />
     <ClCompile Include="UnitTest_Functions.cpp" />
     <ClCompile Include="UnitTest_GPSsentences.cpp" />
