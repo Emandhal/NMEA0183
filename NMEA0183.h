@@ -156,6 +156,9 @@ NMEA0183_PACKENUM(eNMEA0183_SentencesID, uint32_t)
 #ifdef NMEA0183_DECODE_HDT
   NMEA0183_HDT = NMEA0183_SENTENCE_ID('H', 'D', 'T'), //!< Heading - True
 #endif
+#ifdef NMEA0183_DECODE_MTW
+  NMEA0183_MTW = NMEA0183_SENTENCE_ID('M', 'T', 'W'), //!< Water Temperature
+#endif
 #ifdef NMEA0183_DECODE_MWV
   NMEA0183_MWV = NMEA0183_SENTENCE_ID('M', 'W', 'V'), //!< Wind Speed and Angle
 #endif
@@ -490,6 +493,16 @@ typedef struct NMEA0183_HDTdata
 
 //-----------------------------------------------------------------------------
 
+/*! @brief MTW (Water Temperature) sentence fields extraction structure
+ * Format: $--MTW,<WaterTemp:t.t[t]>,C*<CheckSum>
+ */
+typedef struct NMEA0183_MTWdata
+{
+  int16_t WaterTemp; //!< Water temperature, in degree Celcius (divide by 10^2 to get the real temperature)
+} NMEA0183_MTWdata;
+
+//-----------------------------------------------------------------------------
+
 /*! @brief MWV (Wind Speed and Angle) sentence fields extraction structure
  * Format: $--MWV,<WindAngle:www[.w][w]>,<T/R>,<WindSpeed:ss[.s][s]>,<K/M/N/S>,<A/V>*<CheckSum>
  * When the reference field is set to R (Relative), data is provided giving the wind angle in relation to the vessel's bow/centerline and the wind speed, both relative to the (moving) vessel. Also called apparent wind, this is the wind speed as felt when standing on the (moving) ship.
@@ -632,6 +645,9 @@ typedef struct NMEA0183_DecodedData
 #endif
 #ifdef NMEA0183_DECODE_HDT
     NMEA0183_HDTdata HDT;                   //!< HDT (Heading - True) extracted. Use if 'SentenceID' = NMEA0183_HDT
+#endif
+#ifdef NMEA0183_DECODE_MTW
+    NMEA0183_MTWdata MTW;                   //!< MTW (Water Temperature) extracted. Use if 'SentenceID' = NMEA0183_MTW
 #endif
 #ifdef NMEA0183_DECODE_MWV
     NMEA0183_MWVdata MWV;                   //!< MWV (Wind Speed and Angle) extracted. Use if 'SentenceID' = NMEA0183_MWV

@@ -792,6 +792,27 @@ static eERRORRESULT NMEA0183_ProcessHDT(const char* pSentence, NMEA0183_HDTdata*
 
 
 
+#ifdef NMEA0183_DECODE_MTW
+//=============================================================================
+// Process the MTW (Water Temperature) sentence
+//=============================================================================
+static eERRORRESULT NMEA0183_ProcessMTW(const char* pSentence, NMEA0183_MTWdata* pData)
+{ // Format: $--MTW,<WaterTemp:t.t[t]>,C*<CheckSum>
+    char* pStr = (char*)pSentence;
+
+    //--- Get Water Temperature ---
+    pData->WaterTemp = (int16_t)__NMEA0183_StringToInt(&pStr, 0, 2);   //*** Get and save water temperature <hh.h[h]> (divide by 10^2 to get the real temperature)
+    NMEA0183_CHECK_FIELD_DELIMITER;
+    if (*pStr != 'C') return ERR__PARSE_ERROR;                         // Parsing: Should be 'C'
+    ++pStr;
+
+    if (*pStr != NMEA0183_CHECKSUM_DELIMITER) return ERR__PARSE_ERROR; // Should be a '*'
+    return ERR_OK;
+}
+#endif
+
+
+
 #ifdef NMEA0183_DECODE_MWV
 //=============================================================================
 // Process the MWV (Wind Speed and Angle) sentence
@@ -1136,6 +1157,9 @@ eERRORRESULT NMEA0183_ProcessFrame(NMEA0183_DecodeInput* pDecoder, NMEA0183_Deco
 #endif
 #ifdef NMEA0183_DECODE_HDT
     case NMEA0183_HDT: Error = NMEA0183_ProcessHDT(pRaw, &pData->HDT); break;
+#endif
+#ifdef NMEA0183_DECODE_MTW
+    case NMEA0183_MTW: Error = NMEA0183_ProcessMTW(pRaw, &pData->MTW); break;
 #endif
 #ifdef NMEA0183_DECODE_MWV
     case NMEA0183_MWV: Error = NMEA0183_ProcessMWV(pRaw, &pData->MWV); break;
