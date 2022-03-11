@@ -478,6 +478,59 @@ static eERRORRESULT NMEA0183_ProcessAPB(const char* pSentence, NMEA0183_APBdata*
 
 
 
+#ifdef NMEA0183_DECODE_BEC
+//=============================================================================
+// Process the RBECMC (Bearing and distance to waypoint - dead reckoning) sentence
+//=============================================================================
+static eERRORRESULT NMEA0183_ProcessBEC(const char* pSentence, NMEA0183_BECdata* pData)
+{ // Format: $--BEC,<hhmmss.zzz>,<Latitude:ddmm.mmmm[m][m][m]>,<N/S>,<Longitude:dddmm.mmmm[m][m][m]>,<E/W>,<BearingTrue:t[.t][t]>,T,<BearingMag:m[.m][m]>,M,<Distance:sss.ss[s][s]>,N,<WaypointID>*<CheckSum>
+  char* pStr = (char*)pSentence;
+
+  //--- Get Time ---
+  if (__NMEA0183_ExtractTime(&pStr, &pData->Time) == false) return ERR__PARSE_ERROR; //*** Get time
+
+  //--- Get Latitude and Longitude ---
+  if (__NMEA0183_ExtractCoordinate(&pStr, &pData->WaypointLat ) == false) return ERR__PARSE_ERROR; //*** Get latitude
+  if (__NMEA0183_ExtractCoordinate(&pStr, &pData->WaypointLong) == false) return ERR__PARSE_ERROR; //*** Get longitude
+
+  //--- Get Bearing True ---
+  pData->BearingTrue     = (uint16_t)__NMEA0183_StringToInt(&pStr, 0, 2); //*** Get bearing True <t[.t][t]> (divide by 10^2 to get the real bearing True)
+  NMEA0183_CHECK_FIELD_DELIMITER;
+  if (*pStr != 'T') return ERR__PARSE_ERROR;                              // Parsing: Should be 'T'
+  ++pStr;                                                                 // Parsing: Skip 'T'
+  NMEA0183_CHECK_FIELD_DELIMITER;
+
+  //--- Get Bearing Magntic ---
+  pData->BearingMagnetic = (uint16_t)__NMEA0183_StringToInt(&pStr, 0, 2); //*** Get bearing Magntic <m[.m][m]> (divide by 10^2 to get the real bearing Magntic)
+  NMEA0183_CHECK_FIELD_DELIMITER;
+  if (*pStr != 'M') return ERR__PARSE_ERROR;                              // Parsing: Should be 'M'
+  ++pStr;                                                                 // Parsing: Skip 'M'
+  NMEA0183_CHECK_FIELD_DELIMITER;
+
+  //--- Get Distance ---
+  pData->Distance        = (uint32_t)__NMEA0183_StringToInt(&pStr, 0, 4); //*** Get distance <sss.ss[s][s]> (divide by 10^4 to get the real distance)
+  NMEA0183_CHECK_FIELD_DELIMITER;
+  if (*pStr != 'N') return ERR__PARSE_ERROR;                              // Parsing: Should be 'N'
+  ++pStr;                                                                 // Parsing: Skip 'N'
+  NMEA0183_CHECK_FIELD_DELIMITER;
+
+  //--- Get Waypoint ID ---
+  size_t TxtPos = 0;
+  while (TxtPos < (NMEA0183_APB_WAYPOINT_ID_MAX_SIZE - 1))
+  {
+      if ((*pStr == '\0') || (*pStr == NMEA0183_CHECKSUM_DELIMITER)) break;
+      pData->WaypointID[TxtPos] = *pStr;                             //*** Get char
+      ++TxtPos;
+      ++pStr;
+  }
+  pData->WaypointID[TxtPos] = '\0';
+  if (*pStr != NMEA0183_CHECKSUM_DELIMITER) return ERR__PARSE_ERROR; // Should be a '*'
+  return ERR_OK;
+}
+#endif
+
+
+
 #ifdef NMEA0183_DECODE_GGA
 //=============================================================================
 // Process the GGA (Global positioning system fixed data) sentence
@@ -1026,6 +1079,9 @@ eERRORRESULT NMEA0183_ProcessFrame(NMEA0183_DecodeInput* pDecoder, NMEA0183_Deco
 #endif
 #ifdef NMEA0183_DECODE_APB
     case NMEA0183_APB: Error = NMEA0183_ProcessAPB(pRaw, &pData->APB); break;
+#endif
+#ifdef NMEA0183_DECODE_BEC
+    case NMEA0183_BEC: Error = NMEA0183_ProcessBEC(pRaw, &pData->BEC); break;
 #endif
 #ifdef NMEA0183_DECODE_GGA
     case NMEA0183_GGA: Error = NMEA0183_ProcessGGA(pRaw, &pData->GGA); break;
