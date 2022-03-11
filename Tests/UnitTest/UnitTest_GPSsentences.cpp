@@ -51,7 +51,7 @@ namespace NMEA0183test
             Assert::AreEqual('V', FrameData.AAM.ArrivalStatus, L"Test (Low Data), ArrivalStatus should be 'V'");
             Assert::AreEqual('V', FrameData.AAM.PassedWaypoint, L"Test (Low Data), PassedWaypoint should be 'V'");
             Assert::AreEqual(2000u, FrameData.AAM.CircleRadius, L"Test (Low Data), CircleRadius should be 2000");
-            Assert::AreEqual(0, strncmp("", &FrameData.AAM.WaypointID[0], strlen(FrameData.TXT.TextMessage)), L"Test (Full Data), WaypointID should be '\0'");
+            Assert::AreEqual(0, strncmp("", &FrameData.AAM.WaypointID[0], strlen(FrameData.AAM.WaypointID)), L"Test (Full Data), WaypointID should be '\0'");
 
             //=== Test (Full Data) ===========================================
             const char* const TEST_AAM_FULL_DATA_FRAME = "$GPAAM,A,A,0.10,N,WPTNME*32\r\n";
@@ -69,7 +69,7 @@ namespace NMEA0183test
             Assert::AreEqual('A', FrameData.AAM.ArrivalStatus, L"Test (Full Data), ArrivalStatus should be 'A'");
             Assert::AreEqual('A', FrameData.AAM.PassedWaypoint, L"Test (Full Data), PassedWaypoint should be 'A'");
             Assert::AreEqual(1000u, FrameData.AAM.CircleRadius, L"Test (Full Data), CircleRadius should be 1000");
-            Assert::AreEqual(0, strncmp("WPTNME", &FrameData.AAM.WaypointID[0], strlen(FrameData.TXT.TextMessage)), L"Test (Full Data), WaypointID should be 'WPTNME'");
+            Assert::AreEqual(0, strncmp("WPTNME", &FrameData.AAM.WaypointID[0], strlen(FrameData.AAM.WaypointID)), L"Test (Full Data), WaypointID should be 'WPTNME'");
         }
 #endif
 
@@ -426,7 +426,7 @@ namespace NMEA0183test
             Assert::AreEqual(0xFFFFFFFFu, FrameData.RMC.Latitude.Minute, L"Test (Low Data), Latitude.Minute should be 0xFFFFFFFF");
             Assert::AreEqual(' ', FrameData.RMC.Longitude.Direction, L"Test (Low Data), Longitude.Direction should be ' '");
             Assert::AreEqual((uint8_t)0xFF, FrameData.RMC.Longitude.Degree, L"Test (Low Data), Longitude.Degree should be 0xFF");
-            Assert::AreEqual(0xFFFFFFFFu, FrameData.RMC.Longitude.Minute, L"Test (Low Data), Latitude.Minute should be 0xFFFFFFFF");
+            Assert::AreEqual(0xFFFFFFFFu, FrameData.RMC.Longitude.Minute, L"Test (Low Data), Longitude.Minute should be 0xFFFFFFFF");
             Assert::AreEqual(0xFFFFFFFFu, FrameData.RMC.Speed, L"Test (Low Data), Speed should be 0xFFFFFFFF");
             Assert::AreEqual(0xFFFFFFFFu, FrameData.RMC.Track, L"Test (Low Data), Track should be 0xFFFFFFFF");
             Assert::AreEqual((uint8_t)0xFF, FrameData.RMC.Date.Day, L"Test (Low Data), Date.Day should be 0xFF");
@@ -460,7 +460,7 @@ namespace NMEA0183test
             Assert::AreEqual(164500000u, FrameData.RMC.Latitude.Minute, L"Test (Full Data), Latitude.Minute should be 164500000");
             Assert::AreEqual('W', FrameData.RMC.Longitude.Direction, L"Test (Full Data), Longitude.Direction should be 'W'");
             Assert::AreEqual((uint8_t)123, FrameData.RMC.Longitude.Degree, L"Test (Full Data), Longitude.Degree should be 123");
-            Assert::AreEqual(111200000u, FrameData.RMC.Longitude.Minute, L"Test (Full Data), Latitude.Minute should be 111200000");
+            Assert::AreEqual(111200000u, FrameData.RMC.Longitude.Minute, L"Test (Full Data), Longitude.Minute should be 111200000");
             Assert::AreEqual(5000u, FrameData.RMC.Speed, L"Test (Full Data), Speed should be 5000");
             Assert::AreEqual(547000u, FrameData.RMC.Track, L"Test (Full Data), Track should be 547000");
             Assert::AreEqual((uint8_t)19, FrameData.RMC.Date.Day, L"Test (Full Data), Date.Day should be 19");

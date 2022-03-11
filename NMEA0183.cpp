@@ -756,16 +756,16 @@ static eERRORRESULT NMEA0183_ProcessHDG(const char* pSentence, NMEA0183_HDGdata*
 //=============================================================================
 static eERRORRESULT NMEA0183_ProcessHDM(const char* pSentence, NMEA0183_HDMdata* pData)
 { // Format: $--HDM,<Heading:hh.h[h]>,M,<E/W>*<CheckSum>
-    char* pStr = (char*)pSentence;
+  char* pStr = (char*)pSentence;
 
-    //--- Get Heading ---
-    pData->Heading = (uint32_t)__NMEA0183_StringToInt(&pStr, 0, 2);    //*** Get and save heading <hh.h[h]> (divide by 10^2 to get the real heading)
-    NMEA0183_CHECK_FIELD_DELIMITER;
-    if (*pStr != 'M') return ERR__PARSE_ERROR;                         // Parsing: Should be 'M'
-    ++pStr;
+  //--- Get Heading ---
+  pData->Heading = (uint32_t)__NMEA0183_StringToInt(&pStr, 0, 2);    //*** Get and save heading <hh.h[h]> (divide by 10^2 to get the real heading)
+  NMEA0183_CHECK_FIELD_DELIMITER;
+  if (*pStr != 'M') return ERR__PARSE_ERROR;                         // Parsing: Should be 'M'
+  ++pStr;
 
-    if (*pStr != NMEA0183_CHECKSUM_DELIMITER) return ERR__PARSE_ERROR; // Should be a '*'
-    return ERR_OK;
+  if (*pStr != NMEA0183_CHECKSUM_DELIMITER) return ERR__PARSE_ERROR; // Should be a '*'
+  return ERR_OK;
 }
 #endif
 
@@ -777,16 +777,16 @@ static eERRORRESULT NMEA0183_ProcessHDM(const char* pSentence, NMEA0183_HDMdata*
 //=============================================================================
 static eERRORRESULT NMEA0183_ProcessHDT(const char* pSentence, NMEA0183_HDTdata* pData)
 { // Format: $--HDT,<Heading:hh.h[h]>,T,<E/W>*<CheckSum>
-    char* pStr = (char*)pSentence;
+  char* pStr = (char*)pSentence;
 
-    //--- Get Heading ---
-    pData->Heading = (uint32_t)__NMEA0183_StringToInt(&pStr, 0, 2);    //*** Get and save heading <hh.h[h]> (divide by 10^2 to get the real heading)
-    NMEA0183_CHECK_FIELD_DELIMITER;
-    if (*pStr != 'T') return ERR__PARSE_ERROR;                         // Parsing: Should be 'T'
-    ++pStr;
+  //--- Get Heading ---
+  pData->Heading = (uint32_t)__NMEA0183_StringToInt(&pStr, 0, 2);    //*** Get and save heading <hh.h[h]> (divide by 10^2 to get the real heading)
+  NMEA0183_CHECK_FIELD_DELIMITER;
+  if (*pStr != 'T') return ERR__PARSE_ERROR;                         // Parsing: Should be 'T'
+  ++pStr;
 
-    if (*pStr != NMEA0183_CHECKSUM_DELIMITER) return ERR__PARSE_ERROR; // Should be a '*'
-    return ERR_OK;
+  if (*pStr != NMEA0183_CHECKSUM_DELIMITER) return ERR__PARSE_ERROR; // Should be a '*'
+  return ERR_OK;
 }
 #endif
 

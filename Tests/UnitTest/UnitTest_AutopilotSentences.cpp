@@ -55,7 +55,7 @@ namespace NMEA0183test
             Assert::AreEqual('V', FrameData.APB.PassedWaypoint, L"Test (Full Data), PassedWaypoint should be 'V'");
             Assert::AreEqual((uint16_t)1100u, FrameData.APB.BearingOriginToDest, L"Test (Full Data), BearingOriginToDest should be 1100");
             Assert::AreEqual('M', FrameData.APB.BearingOtoDunit, L"Test (Full Data), BearingOtoDunit should be 'M'");
-            Assert::AreEqual(0, strncmp("DEST", &FrameData.APB.WaypointID[0], strlen(FrameData.TXT.TextMessage)), L"Test (Full Data), WaypointID should be 'DEST'");
+            Assert::AreEqual(0, strncmp("DEST", &FrameData.APB.WaypointID[0], strlen(FrameData.APB.WaypointID)), L"Test (Full Data), WaypointID should be 'DEST'");
             Assert::AreEqual((uint16_t)1100u, FrameData.APB.BearingCurPosToDest, L"Test (Full Data), BearingCurPosToDest should be 1100");
             Assert::AreEqual('M', FrameData.APB.BearingCPtoDunit, L"Test (Full Data), BearingCPtoDunit should be 'M'");
             Assert::AreEqual((uint16_t)1100u, FrameData.APB.HeadingToSteerToDest, L"Test (Full Data), HeadingToSteerToDest should be 1100");

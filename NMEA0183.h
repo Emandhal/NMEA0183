@@ -466,23 +466,23 @@ typedef struct NMEA0183_HDGdata
 //-----------------------------------------------------------------------------
 
 /*! @brief HDM (Heading - Magnetic) sentence fields extraction structure
- * Format: $--HDM,<Heading:hh.h[h]>,M,<E/W>*<CheckSum>
+ * Format: $--HDM,<Heading:hh.h[h]>,M*<CheckSum>
  * Actual vessel heading in degrees Magnetic produced by any device or system producing magnetic heading.
  */
 typedef struct NMEA0183_HDMdata
 {
-    uint16_t Heading; //!< Heading, in degree Magnetic (divide by 10^2 to get the real heading)
+  uint16_t Heading; //!< Heading, in degree Magnetic (divide by 10^2 to get the real heading)
 } NMEA0183_HDMdata;
 
 //-----------------------------------------------------------------------------
 
 /*! @brief HDT (Heading - True) sentence fields extraction structure
- * Format: $--HDT,<Heading:hh.h[h]>,T,<E/W>*<CheckSum>
+ * Format: $--HDT,<Heading:hh.h[h]>,T*<CheckSum>
  * Actual vessel heading in degrees True produced by any device or system producing true heading.
  */
 typedef struct NMEA0183_HDTdata
 {
-    uint16_t Heading; //!< Heading, in degree True (divide by 10^2 to get the real heading)
+  uint16_t Heading; //!< Heading, in degree True (divide by 10^2 to get the real heading)
 } NMEA0183_HDTdata;
 
 //-----------------------------------------------------------------------------
