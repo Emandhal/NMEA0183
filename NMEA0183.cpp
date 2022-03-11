@@ -792,6 +792,39 @@ static eERRORRESULT NMEA0183_ProcessHDT(const char* pSentence, NMEA0183_HDTdata*
 
 
 
+#ifdef NMEA0183_DECODE_MWV
+//=============================================================================
+// Process the MWV (Wind Speed and Angle) sentence
+//=============================================================================
+static eERRORRESULT NMEA0183_ProcessMWV(const char* pSentence, NMEA0183_MWVdata* pData)
+{ // Format: $--MWV,<WindAngle:www[.w][w]>,<T/R>,<WindSpeed:ss[.s][s]>,<K/M/N/S>,<A/V>*<CheckSum>
+  char* pStr = (char*)pSentence;
+
+  //--- Get Wind Angle ---
+  pData->WindAngle = (uint16_t)__NMEA0183_StringToInt(&pStr, 0, 2);  //*** Get and save wind angle <www[.w][w]> (divide by 10^2 to get the real angle)
+  NMEA0183_CHECK_FIELD_DELIMITER;
+  pData->Reference = *pStr;                                          //*** Get reference: 'R' = relative ; 'T' = true
+  ++pStr;                                                            // Parsing: Skip <R/T>
+  NMEA0183_CHECK_FIELD_DELIMITER;
+
+  //--- Get Wind Speed ---
+  pData->WindSpeed = (uint16_t)__NMEA0183_StringToInt(&pStr, 0, 2);  //*** Get and save wind speed <ss[.s][s]> (divide by 10^2 to get the real angle)
+  NMEA0183_CHECK_FIELD_DELIMITER;
+  pData->WindSpeedUnit = *pStr;                                      //*** Get wind speed unit: 'K' = Kilometres per hour ; 'M' = Meter per second ; 'N' = Knots ; 'S' = ?
+  ++pStr;                                                            // Parsing: Skip <K/M/N/S>
+  NMEA0183_CHECK_FIELD_DELIMITER;
+
+  //--- Get Status ---
+  pData->Status = *pStr;                                             //*** Get status: A=Active=Good ; V=Void=NotGood
+  ++pStr;                                                            // Parsing: Skip <A/V>
+
+  if (*pStr != NMEA0183_CHECKSUM_DELIMITER) return ERR__PARSE_ERROR; // Should be a '*'
+  return ERR_OK;
+}
+#endif
+
+
+
 #ifdef NMEA0183_DECODE_RMC
 //=============================================================================
 // Process the RMC (Recommended Minimum sentence C) sentence
@@ -1103,6 +1136,9 @@ eERRORRESULT NMEA0183_ProcessFrame(NMEA0183_DecodeInput* pDecoder, NMEA0183_Deco
 #endif
 #ifdef NMEA0183_DECODE_HDT
     case NMEA0183_HDT: Error = NMEA0183_ProcessHDT(pRaw, &pData->HDT); break;
+#endif
+#ifdef NMEA0183_DECODE_MWV
+    case NMEA0183_MWV: Error = NMEA0183_ProcessMWV(pRaw, &pData->MWV); break;
 #endif
 #ifdef NMEA0183_DECODE_RMC
     case NMEA0183_RMC: Error = NMEA0183_ProcessRMC(pRaw, &pData->RMC); break;

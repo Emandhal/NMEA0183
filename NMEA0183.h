@@ -156,6 +156,9 @@ NMEA0183_PACKENUM(eNMEA0183_SentencesID, uint32_t)
 #ifdef NMEA0183_DECODE_HDT
   NMEA0183_HDT = NMEA0183_SENTENCE_ID('H', 'D', 'T'), //!< Heading - True
 #endif
+#ifdef NMEA0183_DECODE_MWV
+  NMEA0183_MWV = NMEA0183_SENTENCE_ID('M', 'W', 'V'), //!< Wind Speed and Angle
+#endif
 #ifdef NMEA0183_DECODE_RMC
   NMEA0183_RMC = NMEA0183_SENTENCE_ID('R', 'M', 'C'), //!< Recommended minimum specific GNSS data
 #endif
@@ -487,6 +490,22 @@ typedef struct NMEA0183_HDTdata
 
 //-----------------------------------------------------------------------------
 
+/*! @brief MWV (Wind Speed and Angle) sentence fields extraction structure
+ * Format: $--MWV,<WindAngle:www[.w][w]>,<T/R>,<WindSpeed:ss[.s][s]>,<K/M/N/S>,<A/V>*<CheckSum>
+ * When the reference field is set to R (Relative), data is provided giving the wind angle in relation to the vessel's bow/centerline and the wind speed, both relative to the (moving) vessel. Also called apparent wind, this is the wind speed as felt when standing on the (moving) ship.
+ * When the reference field is set to T (Theoretical, calculated actual wind), data is provided giving the wind angle in relation to the vessel's bow/centerline and the wind speed as if the vessel was stationary. On a moving ship these data can be calculated by combining the measured relative wind with the vessel's own speed.
+ */
+typedef struct NMEA0183_MWVdata
+{
+  uint16_t WindAngle; //!< Wind Angle, degrees (000.00 to 359.00) extracted (divide by 10^2 to get the real angle)
+  char Reference;     //!< Reference: 'R' = Relative ; 'T' = Theoretical
+  uint16_t WindSpeed; //!< WindSpeed extracted, see WindSpeedUnit for the unit (divide by 10^2 to get the real speed)
+  char WindSpeedUnit; //!< Wind speed units: 'K' = Kilometres per hour ; 'M' = Meter per second ; 'N' = Knots ; 'S' = ?
+  char Status;        //!< Status of the frame: 'A' = valid ; 'V' = void = warning
+} NMEA0183_MWVdata;
+
+//-----------------------------------------------------------------------------
+
 /*! @brief RMC (Recommended Minimum sentence C) sentence fields extraction structure
  * Format: $--RMC,<hhmmss.zzz>,<Status:A/V>,<Latitude:ddmm.mmmm[m][m][m]>,<N/S>,<Longitude:dddmm.mmmm[m][m][m]>,<E/W>,<Speed:sss.ss[s][s]>,<Track:ttt.tt[t][t]>,<ddmmyy>,<MagVar:vv.v[v]>,<E/W>[,<FAA:A/D/E/M/S/N>][,<NavStatus:S/C/U/V>]*<CheckSum>
  * Time, date, position, course and speed data provided by a GNSS navigation receiver. This sentence is transmitted at intervals not exceeding 2-seconds and is always accompanied by RMB when a destination waypoint is active.
@@ -613,6 +632,9 @@ typedef struct NMEA0183_DecodedData
 #endif
 #ifdef NMEA0183_DECODE_HDT
     NMEA0183_HDTdata HDT;                   //!< HDT (Heading - True) extracted. Use if 'SentenceID' = NMEA0183_HDT
+#endif
+#ifdef NMEA0183_DECODE_MWV
+    NMEA0183_MWVdata MWV;                   //!< MWV (Wind Speed and Angle) extracted. Use if 'SentenceID' = NMEA0183_MWV
 #endif
 #ifdef NMEA0183_DECODE_RMC
     NMEA0183_RMCdata RMC;                   //!< RMC (Recommended Minimum sentence C) extracted. Use if 'SentenceID' = NMEA0183_RMC
