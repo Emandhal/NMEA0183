@@ -384,7 +384,7 @@ typedef struct NMEA0183_BECdata
   uint16_t BearingMagnetic;         //!< Bearing, degrees Magnetic (divide by 10^2 to get the real bearing Magnetic)
   uint32_t Distance;                //!< Distance, nautical miles (divide by 10^4 to get the real distance)
   char WaypointID[NMEA0183_BEC_WAYPOINT_ID_MAX_SIZE]; //!< Destination waypoint ID
-} NMEA0183_RMCdNMEA0183_BECdataata;
+} NMEA0183_BECdata;
 
 //-----------------------------------------------------------------------------
 

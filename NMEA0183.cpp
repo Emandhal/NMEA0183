@@ -480,7 +480,7 @@ static eERRORRESULT NMEA0183_ProcessAPB(const char* pSentence, NMEA0183_APBdata*
 
 #ifdef NMEA0183_DECODE_BEC
 //=============================================================================
-// Process the RBECMC (Bearing and distance to waypoint - dead reckoning) sentence
+// Process the BEC (Bearing and distance to waypoint - dead reckoning) sentence
 //=============================================================================
 static eERRORRESULT NMEA0183_ProcessBEC(const char* pSentence, NMEA0183_BECdata* pData)
 { // Format: $--BEC,<hhmmss.zzz>,<Latitude:ddmm.mmmm[m][m][m]>,<N/S>,<Longitude:dddmm.mmmm[m][m][m]>,<E/W>,<BearingTrue:t[.t][t]>,T,<BearingMag:m[.m][m]>,M,<Distance:sss.ss[s][s]>,N,<WaypointID>*<CheckSum>
@@ -516,7 +516,7 @@ static eERRORRESULT NMEA0183_ProcessBEC(const char* pSentence, NMEA0183_BECdata*
 
   //--- Get Waypoint ID ---
   size_t TxtPos = 0;
-  while (TxtPos < (NMEA0183_APB_WAYPOINT_ID_MAX_SIZE - 1))
+  while (TxtPos < (NMEA0183_BEC_WAYPOINT_ID_MAX_SIZE - 1))
   {
       if ((*pStr == '\0') || (*pStr == NMEA0183_CHECKSUM_DELIMITER)) break;
       pData->WaypointID[TxtPos] = *pStr;                             //*** Get char
