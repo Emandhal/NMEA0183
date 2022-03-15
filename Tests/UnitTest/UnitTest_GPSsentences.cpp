@@ -161,6 +161,34 @@ namespace NMEA0183test
         }
 #endif
 
+#ifdef NMEA0183_DECODE_BWW
+        TEST_METHOD(TestMethod_BWW)
+        {
+            NMEA0183decoder NMEA;
+            NMEA0183_DecodedData FrameData;
+            eNMEA0183_State CurrentState;
+            eERRORRESULT LastError = ERR_OK;
+
+            //=== Test (Full Data) ============================================
+            const char* const TEST_BWW_FULL_DATA_FRAME = "$GPBWW,164.3,T,164.5,M,POINTB,POINTA*49\r\n";
+            for (size_t z = 0; z < strlen(TEST_BWW_FULL_DATA_FRAME); ++z) (void)NMEA.AddReceivedCharacter(TEST_BWW_FULL_DATA_FRAME[z]);
+            CurrentState = NMEA.GetDecoderState();
+            Assert::AreEqual(NMEA0183_TO_PROCESS, CurrentState, L"Test (Full Data), state should be NMEA0183_TO_PROCESS");
+            LastError = NMEA.ProcessFrame(&FrameData);
+            Assert::AreEqual(ERR_OK, LastError, L"Test (Full Data), error should be ERR_OK");
+            CurrentState = NMEA.GetDecoderState();
+            Assert::AreEqual(NMEA0183_WAIT_START, CurrentState, L"Test (Full Data), state should be NMEA0183_WAIT_START");
+            //--- Test data ---
+            Assert::AreEqual(true, FrameData.ParseIsValid, L"Test (Full Data), ParseIsValid should be true");
+            Assert::AreEqual(NMEA0183_GP, FrameData.TalkerID, L"Test (Full Data), TalkerID should be NMEA0183_GP");
+            Assert::AreEqual(NMEA0183_BWW, FrameData.SentenceID, L"Test (Full Data), SentenceID should be NMEA0183_BWW");
+            Assert::AreEqual((uint16_t)16430u, FrameData.BWW.BearingTrue, L"Test (Full Data), BearingTrue should be 16430");
+            Assert::AreEqual((uint16_t)16450u, FrameData.BWW.BearingMagnetic, L"Test (Full Data), BearingMagnetic should be 16450");
+            Assert::AreEqual(0, strncmp("POINTB", &FrameData.BWW.FromWaypointID[0], strlen(FrameData.BWW.FromWaypointID)), L"Test (Full Data), FromWaypointID should be 'POINTB'");
+            Assert::AreEqual(0, strncmp("POINTA", &FrameData.BWW.ToWaypointID[0], strlen(FrameData.BWW.ToWaypointID)), L"Test (Full Data), ToWaypointID should be 'POINTA'");
+        }
+#endif
+
 #ifdef NMEA0183_DECODE_GGA
         TEST_METHOD(TestMethod_GGA)
         {
