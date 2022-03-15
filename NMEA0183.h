@@ -153,6 +153,9 @@ NMEA0183_PACKENUM(eNMEA0183_SentencesID, uint32_t)
 #ifdef NMEA0183_DECODE_DPT
   NMEA0183_DPT = NMEA0183_SENTENCE_ID('D', 'P', 'T'), //!< Depth
 #endif
+#ifdef NMEA0183_DECODE_FSI
+  NMEA0183_FSI = NMEA0183_SENTENCE_ID('F', 'S', 'I'), //!< Frequency Set Information
+#endif
 #ifdef NMEA0183_DECODE_GGA
   NMEA0183_GGA = NMEA0183_SENTENCE_ID('G', 'G', 'A'), //!< Global positioning system fixed data
 #endif
@@ -467,6 +470,20 @@ typedef struct NMEA0183_DPTdata
 
 //-----------------------------------------------------------------------------
 
+/*! @brief FSI (Frequency Set Information) sentence fields extraction structure
+ * Format: $--FSI,<TxFreq:tttttt>,<RxFreq:rrrrrr>,<Mode:d/e/m/o/q/s/t/w/x/{/|>,<PowerLevel:0/1..9>*<CheckSum>
+ * This sentence is used to set frequency, mode of operation and transmitter power level of a radiotelephone; to read out frequencies, mode and power and to acknowledge setting commands
+ */
+typedef struct NMEA0183_FSIdata
+{
+  uint32_t TxFrequency; //!< Transmitting frequency, in Hz
+  uint32_t RxFrequency; //!< Receiving frequency, in Hz
+  char Mode;            //!< Mode of operation: 'd' = F3E/G3E simplex, telephone ; 'e' = F3E/G3E duplex, telephone ; 'm' = J3E, telephone ; 'o' = H3E, telephone null for no information ; 'q' = F1B/J2B FEC NBDP, Telex/teleprinter ; 's' = F1B/J2B ARQ NBDP, Telex/teleprinter ; 't' = F1B/J2B receive only, teleprinter/DSC ; 'w' = F1B/J2B, teleprinter/DSC ; 'x' = A1A Morse, tape recorder ; '{' = A1A Morse, Morse key/head set ; '|' = F1C/F2C/F3C, FAX-machine
+  char PowerLevel;      //!< Power level: '0' = Standby ; '1' = Lowest ; ... ; '9' = Highest
+} NMEA0183_FSIdata;
+
+//-----------------------------------------------------------------------------
+
 /*! @brief GGA (Global positioning system fixed data) sentence fields extraction structure
  * Format: $--GGA,<hhmmss.zzz>,<Latitude:ddmm.mmmm[m][m][m]>,<N/S>,<Longitude:dddmm.mmmm[m][m][m]>,<E/W>,<GPSquality:0/1/2/3/4/5/6/7/8>,<SatUsed:ss>,<HDOP:h.h(h)>,<Altitude:(-)aaa.a[a]>,M,<GeoidSep:(-)gg.g[g]>,M,<AgeDiff:cc.c[c]>,<DiffRef:rrrr>*<CheckSum>
  * Time, position and fix related data for a GPS receiver
@@ -721,6 +738,9 @@ typedef struct NMEA0183_DecodedData
 #endif
 #ifdef NMEA0183_DECODE_DPT
     NMEA0183_DPTdata DPT;                   //!< DPT (Depth) extracted. Use if 'SentenceID' = NMEA0183_DPT
+#endif
+#ifdef NMEA0183_DECODE_FSI
+    NMEA0183_FSIdata FSI;                   //!< FSI (Frequency Set Information) extracted. Use if 'SentenceID' = NMEA0183_FSI
 #endif
 #ifdef NMEA0183_DECODE_GGA
     NMEA0183_GGAdata GGA;                   //!< GGA (Global positioning system fixed data) extracted. Use if 'SentenceID' = NMEA0183_GGA

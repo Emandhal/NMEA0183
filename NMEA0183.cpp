@@ -701,6 +701,38 @@ static eERRORRESULT NMEA0183_ProcessDPT(const char* pSentence, NMEA0183_DPTdata*
 
 
 
+#ifdef NMEA0183_DECODE_FSI
+//=============================================================================
+// Process the FSI (Frequency Set Information) sentence
+//=============================================================================
+static eERRORRESULT NMEA0183_ProcessFSI(const char* pSentence, NMEA0183_FSIdata* pData)
+{ // Format: $--FSI,<TxFreq:tttttt>,<RxFreq:rrrrrr>,<Mode:d/e/m/o/q/s/t/w/x/{/|>,<PowerLevel:0/1..9>*<CheckSum>
+  char* pStr = (char*)pSentence;
+
+  //--- Get Tx Frequency ---
+  pData->TxFrequency = (uint32_t)__NMEA0183_StringToInt(&pStr, 0, 3); //*** Get and save transmitting frequency <tttttt>
+  NMEA0183_CHECK_FIELD_DELIMITER;
+
+  //--- Get Rx Frequency ---
+  pData->RxFrequency = (uint32_t)__NMEA0183_StringToInt(&pStr, 0, 3); //*** Get and save receiving frequency <rrrrrr>
+  NMEA0183_CHECK_FIELD_DELIMITER;
+
+  //--- Get Mode of Operation ---
+  pData->Mode = *pStr;                                                //*** Get mode of Operation
+  ++pStr;                                                             // Parsing: Skip <d/e/m/o/q/s/t/w/x/{/|>
+  NMEA0183_CHECK_FIELD_DELIMITER;
+
+  //--- Get Power Level ---
+  pData->PowerLevel = *pStr;                                          //*** Get power level: '0' = Standby ; '1' = Lowest ; ... ; '9' = Highest
+  ++pStr;                                                             // Parsing: Skip <0/1..9>
+
+  if (*pStr != NMEA0183_CHECKSUM_DELIMITER) return ERR__PARSE_ERROR;  // Should be a '*'
+  return ERR_OK;
+}
+#endif
+
+
+
 #ifdef NMEA0183_DECODE_GGA
 //=============================================================================
 // Process the GGA (Global positioning system fixed data) sentence
@@ -1324,6 +1356,9 @@ eERRORRESULT NMEA0183_ProcessFrame(NMEA0183_DecodeInput* pDecoder, NMEA0183_Deco
 #endif
 #ifdef NMEA0183_DECODE_DPT
     case NMEA0183_DPT: Error = NMEA0183_ProcessDPT(pRaw, &pData->DPT); break;
+#endif
+#ifdef NMEA0183_DECODE_FSI
+    case NMEA0183_FSI: Error = NMEA0183_ProcessFSI(pRaw, &pData->FSI); break;
 #endif
 #ifdef NMEA0183_DECODE_GGA
     case NMEA0183_GGA: Error = NMEA0183_ProcessGGA(pRaw, &pData->GGA); break;
