@@ -135,6 +135,9 @@ NMEA0183_PACKENUM(eNMEA0183_SentencesID, uint32_t)
 #ifdef NMEA0183_DECODE_BEC
   NMEA0183_BEC = NMEA0183_SENTENCE_ID('B', 'E', 'C'), //!< Bearing and distance to waypoint - dead reckoning
 #endif
+#ifdef NMEA0183_DECODE_BOD
+  NMEA0183_BOD = NMEA0183_SENTENCE_ID('B', 'O', 'D'), //!< Bearing - Origin to Destination
+#endif
 #ifdef NMEA0183_DECODE_GGA
   NMEA0183_GGA = NMEA0183_SENTENCE_ID('G', 'G', 'A'), //!< Global positioning system fixed data
 #endif
@@ -388,6 +391,22 @@ typedef struct NMEA0183_BECdata
 
 //-----------------------------------------------------------------------------
 
+#define NMEA0183_BOD_WAYPOINT_ID_MAX_SIZE  ( 10 ) //! ASCII characters + 0 terminal
+
+/*! @brief BOD (Bearing - Origin to Destination) sentence fields extraction structure
+ * Format: $--BOD,<BearingTrue:t[.t][t]>,T,<BearingMag:m[.m][m]>,M,<DestWaypointID>,<OriginWaypointID>*<CheckSum>
+ * Bearing angle of the line, calculated at the origin waypoint, extending to the destination waypoint from theorigin waypoint for the active navigation leg of the journey
+ */
+typedef struct NMEA0183_BODdata
+{
+  uint16_t BearingTrue;     //!< Bearing, degrees True (divide by 10^2 to get the real bearing True)
+  uint16_t BearingMagnetic; //!< Bearing, degrees Magnetic (divide by 10^2 to get the real bearing Magnetic)
+  char DestWaypointID[NMEA0183_BOD_WAYPOINT_ID_MAX_SIZE];   //!< Destination waypoint ID
+  char OriginWaypointID[NMEA0183_BOD_WAYPOINT_ID_MAX_SIZE]; //!< Origin waypoint ID
+} NMEA0183_BODdata;
+
+//-----------------------------------------------------------------------------
+
 /*! @brief GGA (Global positioning system fixed data) sentence fields extraction structure
  * Format: $--GGA,<hhmmss.zzz>,<Latitude:ddmm.mmmm[m][m][m]>,<N/S>,<Longitude:dddmm.mmmm[m][m][m]>,<E/W>,<GPSquality:0/1/2/3/4/5/6/7/8>,<SatUsed:ss>,<HDOP:h.h(h)>,<Altitude:(-)aaa.a[a]>,M,<GeoidSep:(-)gg.g[g]>,M,<AgeDiff:cc.c[c]>,<DiffRef:rrrr>*<CheckSum>
  * Time, position and fix related data for a GPS receiver
@@ -624,6 +643,9 @@ typedef struct NMEA0183_DecodedData
 #endif
 #ifdef NMEA0183_DECODE_BEC
     NMEA0183_BECdata BEC;                   //!< BEC (Bearing and distance to waypoint - dead reckoning) extracted. Use if 'SentenceID' = NMEA0183_BEC
+#endif
+#ifdef NMEA0183_DECODE_BOD
+    NMEA0183_BODdata BOD;                   //!< BOD (Bearing - Origin to Destination) extracted. Use if 'SentenceID' = NMEA0183_BOD
 #endif
 #ifdef NMEA0183_DECODE_GGA
     NMEA0183_GGAdata GGA;                   //!< GGA (Global positioning system fixed data) extracted. Use if 'SentenceID' = NMEA0183_GGA

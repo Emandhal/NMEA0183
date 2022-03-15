@@ -531,6 +531,60 @@ static eERRORRESULT NMEA0183_ProcessBEC(const char* pSentence, NMEA0183_BECdata*
 
 
 
+#ifdef NMEA0183_DECODE_BOD
+//=============================================================================
+// Process the BOD (Bearing - Origin to Destination) sentence
+//=============================================================================
+static eERRORRESULT NMEA0183_ProcessBOD(const char* pSentence, NMEA0183_BODdata* pData)
+{ // Format: $--BOD,<BearingTrue:t[.t][t]>,T,<BearingMag:m[.m][m]>,M,<DestWaypointID>,<OriginWaypointID>*<CheckSum>
+  char* pStr = (char*)pSentence;
+
+  //--- Get Bearing True ---
+  pData->BearingTrue = (uint16_t)__NMEA0183_StringToInt(&pStr, 0, 2);     //*** Get bearing True <t[.t][t]> (divide by 10^2 to get the real bearing True)
+  NMEA0183_CHECK_FIELD_DELIMITER;
+  if (*pStr != 'T') return ERR__PARSE_ERROR;                              // Parsing: Should be 'T'
+  ++pStr;                                                                 // Parsing: Skip 'T'
+  NMEA0183_CHECK_FIELD_DELIMITER;
+
+  //--- Get Bearing Magntic ---
+  pData->BearingMagnetic = (uint16_t)__NMEA0183_StringToInt(&pStr, 0, 2); //*** Get bearing Magntic <m[.m][m]> (divide by 10^2 to get the real bearing Magntic)
+  NMEA0183_CHECK_FIELD_DELIMITER;
+  if (*pStr != 'M') return ERR__PARSE_ERROR;                              // Parsing: Should be 'M'
+  ++pStr;                                                                 // Parsing: Skip 'M'
+  NMEA0183_CHECK_FIELD_DELIMITER;
+
+  //--- Get Destination Waypoint ID ---
+  size_t TxtPos = 0;
+  while (TxtPos < (NMEA0183_BOD_WAYPOINT_ID_MAX_SIZE - 1))
+  {
+    if ((*pStr == '\0') || (*pStr == NMEA0183_FIELD_DELIMITER) || (*pStr == NMEA0183_CHECKSUM_DELIMITER)) break;
+    pData->DestWaypointID[TxtPos] = *pStr;                           //*** Get char
+    ++TxtPos;
+    ++pStr;
+  }
+  pData->DestWaypointID[TxtPos] = '\0';
+
+  //--- Get Origin Waypoint ID ---
+  TxtPos = 0;
+  if (*pStr == NMEA0183_FIELD_DELIMITER)
+  {
+    ++pStr;
+    while (TxtPos < (NMEA0183_BOD_WAYPOINT_ID_MAX_SIZE - 1))
+    {
+      if ((*pStr == '\0') || (*pStr == NMEA0183_CHECKSUM_DELIMITER)) break;
+      pData->OriginWaypointID[TxtPos] = *pStr;                       //*** Get char
+      ++TxtPos;
+      ++pStr;
+    }
+  }
+  pData->OriginWaypointID[TxtPos] = '\0';
+  if (*pStr != NMEA0183_CHECKSUM_DELIMITER) return ERR__PARSE_ERROR; // Should be a '*'
+  return ERR_OK;
+}
+#endif
+
+
+
 #ifdef NMEA0183_DECODE_GGA
 //=============================================================================
 // Process the GGA (Global positioning system fixed data) sentence
@@ -1136,6 +1190,9 @@ eERRORRESULT NMEA0183_ProcessFrame(NMEA0183_DecodeInput* pDecoder, NMEA0183_Deco
 #endif
 #ifdef NMEA0183_DECODE_BEC
     case NMEA0183_BEC: Error = NMEA0183_ProcessBEC(pRaw, &pData->BEC); break;
+#endif
+#ifdef NMEA0183_DECODE_BOD
+    case NMEA0183_BOD: Error = NMEA0183_ProcessBOD(pRaw, &pData->BOD); break;
 #endif
 #ifdef NMEA0183_DECODE_GGA
     case NMEA0183_GGA: Error = NMEA0183_ProcessGGA(pRaw, &pData->GGA); break;

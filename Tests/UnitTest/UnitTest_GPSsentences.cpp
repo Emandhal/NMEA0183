@@ -115,6 +115,52 @@ namespace NMEA0183test
         }
 #endif
 
+#ifdef NMEA0183_DECODE_BOD
+        TEST_METHOD(TestMethod_BOD)
+        {
+            NMEA0183decoder NMEA;
+            NMEA0183_DecodedData FrameData;
+            eNMEA0183_State CurrentState;
+            eERRORRESULT LastError = ERR_OK;
+
+            //=== Test (GOTO mode Data) ============================================
+            const char* const TEST_BOD_GOTO_MODE_DATA_FRAME = "$GPBOD,099.3,T,105.6,M,POINTB*64\r\n";
+            for (size_t z = 0; z < strlen(TEST_BOD_GOTO_MODE_DATA_FRAME); ++z) (void)NMEA.AddReceivedCharacter(TEST_BOD_GOTO_MODE_DATA_FRAME[z]);
+            CurrentState = NMEA.GetDecoderState();
+            Assert::AreEqual(NMEA0183_TO_PROCESS, CurrentState, L"Test (GOTO mode Data), state should be NMEA0183_TO_PROCESS");
+            LastError = NMEA.ProcessFrame(&FrameData);
+            Assert::AreEqual(ERR_OK, LastError, L"Test (GOTO mode Data), error should be ERR_OK");
+            CurrentState = NMEA.GetDecoderState();
+            Assert::AreEqual(NMEA0183_WAIT_START, CurrentState, L"Test (GOTO mode Data), state should be NMEA0183_WAIT_START");
+            //--- Test data ---
+            Assert::AreEqual(true, FrameData.ParseIsValid, L"Test (GOTO mode Data), ParseIsValid should be true");
+            Assert::AreEqual(NMEA0183_GP, FrameData.TalkerID, L"Test (GOTO mode Data), TalkerID should be NMEA0183_GP");
+            Assert::AreEqual(NMEA0183_BOD, FrameData.SentenceID, L"Test (GOTO mode Data), SentenceID should be NMEA0183_BOD");
+            Assert::AreEqual((uint16_t)9930u, FrameData.BOD.BearingTrue, L"Test (GOTO mode Data), BearingTrue should be 9930");
+            Assert::AreEqual((uint16_t)10560u, FrameData.BOD.BearingMagnetic, L"Test (GOTO mode Data), BearingMagnetic should be 10560");
+            Assert::AreEqual(0, strncmp("POINTB", &FrameData.BOD.DestWaypointID[0], strlen(FrameData.BOD.DestWaypointID)), L"Test (GOTO mode Data), DestWaypointID should be 'POINTB'");
+            Assert::AreEqual(0, strncmp("", &FrameData.BOD.OriginWaypointID[0], strlen(FrameData.BOD.OriginWaypointID)), L"Test (GOTO mode Data), OriginWaypointID should be ''");
+
+            //=== Test (Route active Data) ============================================
+            const char* const TEST_BOD_ROUTE_MODE_DATA_FRAME = "$GPBOD,097.0,T,103.2,M,POINTB,POINTA*4A\r\n";
+            for (size_t z = 0; z < strlen(TEST_BOD_ROUTE_MODE_DATA_FRAME); ++z) (void)NMEA.AddReceivedCharacter(TEST_BOD_ROUTE_MODE_DATA_FRAME[z]);
+            CurrentState = NMEA.GetDecoderState();
+            Assert::AreEqual(NMEA0183_TO_PROCESS, CurrentState, L"Test (Route active Data), state should be NMEA0183_TO_PROCESS");
+            LastError = NMEA.ProcessFrame(&FrameData);
+            Assert::AreEqual(ERR_OK, LastError, L"Test (Route active Data), error should be ERR_OK");
+            CurrentState = NMEA.GetDecoderState();
+            Assert::AreEqual(NMEA0183_WAIT_START, CurrentState, L"Test (Route active Data), state should be NMEA0183_WAIT_START");
+            //--- Test data ---
+            Assert::AreEqual(true, FrameData.ParseIsValid, L"Test (Route active Data), ParseIsValid should be true");
+            Assert::AreEqual(NMEA0183_GP, FrameData.TalkerID, L"Test (Route active Data), TalkerID should be NMEA0183_GP");
+            Assert::AreEqual(NMEA0183_BOD, FrameData.SentenceID, L"Test (Route active Data), SentenceID should be NMEA0183_BOD");
+            Assert::AreEqual((uint16_t)9700u, FrameData.BOD.BearingTrue, L"Test (Route active Data), BearingTrue should be 9700");
+            Assert::AreEqual((uint16_t)10320u, FrameData.BOD.BearingMagnetic, L"Test (Route active Data), BearingMagnetic should be 10320");
+            Assert::AreEqual(0, strncmp("POINTB", &FrameData.BOD.DestWaypointID[0], strlen(FrameData.BOD.DestWaypointID)), L"Test (Route active Data), DestWaypointID should be 'POINTB'");
+            Assert::AreEqual(0, strncmp("POINTA", &FrameData.BOD.OriginWaypointID[0], strlen(FrameData.BOD.OriginWaypointID)), L"Test (Route active Data), OriginWaypointID should be 'POINTA'");
+        }
+#endif
+
 #ifdef NMEA0183_DECODE_GGA
         TEST_METHOD(TestMethod_GGA)
         {
