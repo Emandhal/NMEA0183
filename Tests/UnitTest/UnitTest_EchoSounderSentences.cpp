@@ -49,5 +49,52 @@ namespace NMEA0183test
             Assert::AreEqual((int16_t)2680, FrameData.MTW.WaterTemp, L"Test (Full Data), Speed should be 2680");
         }
 #endif
+
+#if defined(NMEA0183_DECODE_DBK)/* || defined(NMEA0183_DECODE_DBS)*/ || defined(NMEA0183_DECODE_DBT)
+        TEST_METHOD(TestMethod_DBx)
+        {
+            NMEA0183decoder NMEA;
+            NMEA0183_DecodedData FrameData;
+            eNMEA0183_State CurrentState;
+            eERRORRESULT LastError = ERR_OK;
+
+#  ifdef NMEA0183_DECODE_DBK
+            //=== Test (Low Data) ============================================
+            const char* const TEST_DBx_LOW_DATA_FRAME = "$SDDBK,,f,22.5,M,,F*2C\r\n";
+            for (size_t z = 0; z < strlen(TEST_DBx_LOW_DATA_FRAME); ++z) (void)NMEA.AddReceivedCharacter(TEST_DBx_LOW_DATA_FRAME[z]);
+            CurrentState = NMEA.GetDecoderState();
+            Assert::AreEqual(NMEA0183_TO_PROCESS, CurrentState, L"Test (Low Data), state should be NMEA0183_TO_PROCESS");
+            LastError = NMEA.ProcessFrame(&FrameData);
+            Assert::AreEqual(ERR_OK, LastError, L"Test (Low Data), error should be ERR_OK");
+            CurrentState = NMEA.GetDecoderState();
+            Assert::AreEqual(NMEA0183_WAIT_START, CurrentState, L"Test (Low Data), state should be NMEA0183_WAIT_START");
+            //--- Test data ---
+            Assert::AreEqual(true, FrameData.ParseIsValid, L"Test (Low Data), ParseIsValid should be true");
+            Assert::AreEqual((eNMEA0183_TalkerID)NMEA0183_TALKER_ID('S', 'D'), FrameData.TalkerID, L"Test (Low Data), TalkerID should be NMEA0183_SD");
+            Assert::AreEqual(NMEA0183_DBK, FrameData.SentenceID, L"Test (Low Data), SentenceID should be NMEA0183_DBK");
+            Assert::AreEqual(0xFFFFFFFFu, FrameData.DBK.DepthFeet, L"Test (Low Data), DepthFeet should be 0xFFFFFFFF");
+            Assert::AreEqual(22500u, FrameData.DBK.DepthMeter, L"Test (Low Data), DepthMeter should be 22500");
+            Assert::AreEqual(0xFFFFFFFFu, FrameData.DBK.DepthFathom, L"Test (Low Data), DepthFathom should be 0xFFFFFFFF");
+#  endif
+#  ifdef NMEA0183_DECODE_DBT
+            //=== Test (Full Data) ============================================
+            const char* const TEST_DBx_FULL_DATA_FRAME = "$SDDBT,7.8,f,2.4,M,1.3,F*0D\r\n";
+            for (size_t z = 0; z < strlen(TEST_DBx_FULL_DATA_FRAME); ++z) (void)NMEA.AddReceivedCharacter(TEST_DBx_FULL_DATA_FRAME[z]);
+            CurrentState = NMEA.GetDecoderState();
+            Assert::AreEqual(NMEA0183_TO_PROCESS, CurrentState, L"Test (Full Data), state should be NMEA0183_TO_PROCESS");
+            LastError = NMEA.ProcessFrame(&FrameData);
+            Assert::AreEqual(ERR_OK, LastError, L"Test (Full Data), error should be ERR_OK");
+            CurrentState = NMEA.GetDecoderState();
+            Assert::AreEqual(NMEA0183_WAIT_START, CurrentState, L"Test (Full Data), state should be NMEA0183_WAIT_START");
+            //--- Test data ---
+            Assert::AreEqual(true, FrameData.ParseIsValid, L"Test (Full Data), ParseIsValid should be true");
+            Assert::AreEqual((eNMEA0183_TalkerID)NMEA0183_TALKER_ID('S', 'D'), FrameData.TalkerID, L"Test (Full Data), TalkerID should be NMEA0183_SD");
+            Assert::AreEqual(NMEA0183_DBT, FrameData.SentenceID, L"Test (Full Data), SentenceID should be NMEA0183_DBT");
+            Assert::AreEqual(7800u, FrameData.DBT.DepthFeet, L"Test (Full Data), DepthFeet should be 7800");
+            Assert::AreEqual(2400u, FrameData.DBT.DepthMeter, L"Test (Full Data), DepthMeter should be 2400");
+            Assert::AreEqual(1300u, FrameData.DBT.DepthFathom, L"Test (Full Data), DepthFathom should be 1300");
+#  endif
+        }
+#endif
     };
 }

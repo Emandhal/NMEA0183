@@ -141,6 +141,15 @@ NMEA0183_PACKENUM(eNMEA0183_SentencesID, uint32_t)
 #ifdef NMEA0183_DECODE_BWW
   NMEA0183_BWW = NMEA0183_SENTENCE_ID('B', 'W', 'W'), //!< Bearing - Waypoint to Waypoint
 #endif
+#ifdef NMEA0183_DECODE_DBK
+  NMEA0183_DBK = NMEA0183_SENTENCE_ID('D', 'B', 'K'), //!< Depth Below Keel
+#endif
+#ifdef NMEA0183_DECODE_DBS
+  NMEA0183_DBS = NMEA0183_SENTENCE_ID('D', 'K', 'S'), //!< Depth Below Surface
+#endif
+#ifdef NMEA0183_DECODE_DBT
+  NMEA0183_DBT = NMEA0183_SENTENCE_ID('D', 'B', 'T'), //!< Depth Below Tranducer
+#endif
 #ifdef NMEA0183_DECODE_GGA
   NMEA0183_GGA = NMEA0183_SENTENCE_ID('G', 'G', 'A'), //!< Global positioning system fixed data
 #endif
@@ -426,6 +435,21 @@ typedef struct NMEA0183_BWWdata
 
 //-----------------------------------------------------------------------------
 
+/*! @brief DBK (Depth Below Keel), DBS (Depth Below Surface), or DBT (Depth Below Tranducer) sentence fields extraction structure
+ * Format: $--DBK,<DepthFeet:d[.d][d][d]>,f,<DepthMeter:m[.m][m][m]>,M,<DepthMeter:f[.f][f][f]>,F*<CheckSum>
+ * Format: $--DBS,<DepthFeet:d[.d][d][d]>,f,<DepthMeter:m[.m][m][m]>,M,<DepthMeter:f[.f][f][f]>,F*<CheckSum>
+ * Format: $--DBT,<DepthFeet:d[.d][d][d]>,f,<DepthMeter:m[.m][m][m]>,M,<DepthMeter:f[.f][f][f]>,F*<CheckSum>
+ * Water depth referenced to the keel, surface, or tranducer
+ */
+typedef struct NMEA0183_DBxdata
+{
+  uint32_t DepthFeet;   //!< Water depth, in feets (divide by 10^3 to get the real depth)
+  uint32_t DepthMeter;  //!< Water depth, in meters (divide by 10^3 to get the real depth)
+  uint32_t DepthFathom; //!< Water depth, in fathoms (divide by 10^3 to get the real depth)
+} NMEA0183_DBxdata;
+
+//-----------------------------------------------------------------------------
+
 /*! @brief GGA (Global positioning system fixed data) sentence fields extraction structure
  * Format: $--GGA,<hhmmss.zzz>,<Latitude:ddmm.mmmm[m][m][m]>,<N/S>,<Longitude:dddmm.mmmm[m][m][m]>,<E/W>,<GPSquality:0/1/2/3/4/5/6/7/8>,<SatUsed:ss>,<HDOP:h.h(h)>,<Altitude:(-)aaa.a[a]>,M,<GeoidSep:(-)gg.g[g]>,M,<AgeDiff:cc.c[c]>,<DiffRef:rrrr>*<CheckSum>
  * Time, position and fix related data for a GPS receiver
@@ -668,6 +692,15 @@ typedef struct NMEA0183_DecodedData
 #endif
 #ifdef NMEA0183_DECODE_BWW
     NMEA0183_BWWdata BWW;                   //!< BWW (Bearing - Waypoint to Waypoint) extracted. Use if 'SentenceID' = NMEA0183_BWW
+#endif
+#ifdef NMEA0183_DECODE_DBK
+    NMEA0183_DBxdata DBK;                   //!< DBK (Depth Below Keel) extracted. Use if 'SentenceID' = NMEA0183_DBK
+#endif
+#ifdef NMEA0183_DECODE_DBS
+    NMEA0183_DBxdata DBS;                   //!< DBK (Depth Below Surface) extracted. Use if 'SentenceID' = NMEA0183_DBS
+#endif
+#ifdef NMEA0183_DECODE_DBT
+    NMEA0183_DBxdata DBT;                   //!< DBK (Depth Below Tranducer) extracted. Use if 'SentenceID' = NMEA0183_DBT
 #endif
 #ifdef NMEA0183_DECODE_GGA
     NMEA0183_GGAdata GGA;                   //!< GGA (Global positioning system fixed data) extracted. Use if 'SentenceID' = NMEA0183_GGA

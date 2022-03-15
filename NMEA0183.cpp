@@ -636,6 +636,37 @@ static eERRORRESULT NMEA0183_ProcessBWW(const char* pSentence, NMEA0183_BWWdata*
 
 
 
+#if defined(NMEA0183_DECODE_DBK) || defined(NMEA0183_DECODE_DBS) || defined(NMEA0183_DECODE_DBT)
+//=============================================================================
+// Process the DBK (Depth Below Keel), DBS (Depth Below Surface), or DBT (Depth Below Tranducer) sentence
+//=============================================================================
+static eERRORRESULT NMEA0183_ProcessDBx(const char* pSentence, NMEA0183_DBxdata* pData)
+{ // Format: $--DBx,<DepthFeet:d[.d][d][d]>,f,<DepthMeter:m[.m][m][m]>,M,<DepthMeter:f[.f][f][f]>,F*<CheckSum>
+  char* pStr = (char*)pSentence;
+
+  //--- Get Depth ---
+  pData->DepthFeet = (uint32_t)__NMEA0183_StringToInt(&pStr, 0, 3);   //*** Get and save depth <d[.d][d][d]> (divide by 10^3 to get the real depth)
+  NMEA0183_CHECK_FIELD_DELIMITER;
+  if (*pStr != 'f') return ERR__PARSE_ERROR;                          // Parsing: Should be 'f'
+  ++pStr;
+  NMEA0183_CHECK_FIELD_DELIMITER;
+  pData->DepthMeter = (uint32_t)__NMEA0183_StringToInt(&pStr, 0, 3);  //*** Get and save depth <m[.m][m][m]> (divide by 10^3 to get the real depth)
+  NMEA0183_CHECK_FIELD_DELIMITER;
+  if (*pStr != 'M') return ERR__PARSE_ERROR;                          // Parsing: Should be 'M'
+  ++pStr;
+  NMEA0183_CHECK_FIELD_DELIMITER;
+  pData->DepthFathom = (uint32_t)__NMEA0183_StringToInt(&pStr, 0, 3); //*** Get and save depth <f[.f][f][f]> (divide by 10^3 to get the real depth)
+  NMEA0183_CHECK_FIELD_DELIMITER;
+  if (*pStr != 'F') return ERR__PARSE_ERROR;                          // Parsing: Should be 'F'
+  ++pStr;
+
+  if (*pStr != NMEA0183_CHECKSUM_DELIMITER) return ERR__PARSE_ERROR;  // Should be a '*'
+  return ERR_OK;
+}
+#endif
+
+
+
 #ifdef NMEA0183_DECODE_GGA
 //=============================================================================
 // Process the GGA (Global positioning system fixed data) sentence
@@ -1247,6 +1278,15 @@ eERRORRESULT NMEA0183_ProcessFrame(NMEA0183_DecodeInput* pDecoder, NMEA0183_Deco
 #endif
 #ifdef NMEA0183_DECODE_BWW
     case NMEA0183_BWW: Error = NMEA0183_ProcessBWW(pRaw, &pData->BWW); break;
+#endif
+#ifdef NMEA0183_DECODE_DBK
+    case NMEA0183_DBK: Error = NMEA0183_ProcessDBx(pRaw, &pData->DBK); break;
+#endif
+#ifdef NMEA0183_DECODE_DBS
+    case NMEA0183_DBS: Error = NMEA0183_ProcessDBx(pRaw, &pData->DBS); break;
+#endif
+#ifdef NMEA0183_DECODE_DBT
+    case NMEA0183_DBT: Error = NMEA0183_ProcessDBx(pRaw, &pData->DBT); break;
 #endif
 #ifdef NMEA0183_DECODE_GGA
     case NMEA0183_GGA: Error = NMEA0183_ProcessGGA(pRaw, &pData->GGA); break;
