@@ -667,6 +667,40 @@ static eERRORRESULT NMEA0183_ProcessDBx(const char* pSentence, NMEA0183_DBxdata*
 
 
 
+#ifdef NMEA0183_DECODE_DPT
+//=============================================================================
+// Process the DPT (Depth) sentence
+//=============================================================================
+static eERRORRESULT NMEA0183_ProcessDPT(const char* pSentence, NMEA0183_DPTdata* pData)
+{ // Format: $--DPT,<WaterDepth:m[.m][m][m]>,<OffsetTrans:(-)o[.o][o]>,<RangeScale:r[.r][r]>*<CheckSum>
+  char* pStr = (char*)pSentence;
+
+  //--- Get Water Depth ---
+  pData->DepthMeter = (uint32_t)__NMEA0183_StringToInt(&pStr, 0, 3);   //*** Get and save water depth <m[.m][m][m]> (divide by 10^3 to get the real depth)
+  NMEA0183_CHECK_FIELD_DELIMITER;
+
+  //--- Get Offset from Transducer ---
+  if ((*pStr != NMEA0183_FIELD_DELIMITER) && (*pStr != NMEA0183_CHECKSUM_DELIMITER))
+  {
+    pData->OffsetTrans = (int16_t)__NMEA0183_StringToInt(&pStr, 0, 2); //*** Get and save offset from transducer <(-)o[.o][o]> (divide by 10^2 to get the real offset)
+  }
+  else pData->OffsetTrans = 0;                                         // If no offset, in this case, the depth offset will always be zero (see NMEA-0183-Information-sheet-issue-4-1-1)
+  if (*pStr == NMEA0183_FIELD_DELIMITER) ++pStr;                       // Parsing: Skip ','
+
+  if ((*pStr != NMEA0183_FIELD_DELIMITER) && (*pStr != NMEA0183_CHECKSUM_DELIMITER))
+  {
+    //--- Get Maximum range scale in use (if available) ---
+    pData->RangeScale = (uint16_t)__NMEA0183_StringToInt(&pStr, 0, 0); //*** Get and save maximum range scale in use <r[.r][r]>
+  }
+  else pData->RangeScale = NMEA0183_NO_VALUE;
+
+  if (*pStr != NMEA0183_CHECKSUM_DELIMITER) return ERR__PARSE_ERROR;   // Should be a '*'
+  return ERR_OK;
+}
+#endif
+
+
+
 #ifdef NMEA0183_DECODE_GGA
 //=============================================================================
 // Process the GGA (Global positioning system fixed data) sentence
@@ -1287,6 +1321,9 @@ eERRORRESULT NMEA0183_ProcessFrame(NMEA0183_DecodeInput* pDecoder, NMEA0183_Deco
 #endif
 #ifdef NMEA0183_DECODE_DBT
     case NMEA0183_DBT: Error = NMEA0183_ProcessDBx(pRaw, &pData->DBT); break;
+#endif
+#ifdef NMEA0183_DECODE_DPT
+    case NMEA0183_DPT: Error = NMEA0183_ProcessDPT(pRaw, &pData->DPT); break;
 #endif
 #ifdef NMEA0183_DECODE_GGA
     case NMEA0183_GGA: Error = NMEA0183_ProcessGGA(pRaw, &pData->GGA); break;

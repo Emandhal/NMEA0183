@@ -150,6 +150,9 @@ NMEA0183_PACKENUM(eNMEA0183_SentencesID, uint32_t)
 #ifdef NMEA0183_DECODE_DBT
   NMEA0183_DBT = NMEA0183_SENTENCE_ID('D', 'B', 'T'), //!< Depth Below Tranducer
 #endif
+#ifdef NMEA0183_DECODE_DPT
+  NMEA0183_DPT = NMEA0183_SENTENCE_ID('D', 'P', 'T'), //!< Depth
+#endif
 #ifdef NMEA0183_DECODE_GGA
   NMEA0183_GGA = NMEA0183_SENTENCE_ID('G', 'G', 'A'), //!< Global positioning system fixed data
 #endif
@@ -450,6 +453,20 @@ typedef struct NMEA0183_DBxdata
 
 //-----------------------------------------------------------------------------
 
+/*! @brief DPT (Depth) sentence fields extraction structure
+ * Format: $--DPT,<WaterDepth:m[.m][m][m]>,<OffsetTrans:(-)o[.o][o]>,<RangeScale:r[.r][r]>*<CheckSum>
+ * Water depth relative to the transducer and offset of the measuring transducer.
+ * Positive offset numbers provide the distance from the transducer to the waterline. Negative offset numbers provide the distance from the transducer to the part of the keel of interest
+ */
+typedef struct NMEA0183_DPTdata
+{
+  uint32_t DepthMeter; //!< Water depth, in meters (divide by 10^3 to get the real depth)
+  int16_t OffsetTrans; //!< Offset from transducer, in meters (divide by 10^2 to get the real offset). For IEC applications the offset shall always be applied so as to provide depth relative to the keel: "positive" = distance from transducer to water-line, "-" = distance from transducer to keel
+  uint32_t RangeScale; //!< Maximum range scale in use (NMEA 3.0 and later)
+} NMEA0183_DPTdata;
+
+//-----------------------------------------------------------------------------
+
 /*! @brief GGA (Global positioning system fixed data) sentence fields extraction structure
  * Format: $--GGA,<hhmmss.zzz>,<Latitude:ddmm.mmmm[m][m][m]>,<N/S>,<Longitude:dddmm.mmmm[m][m][m]>,<E/W>,<GPSquality:0/1/2/3/4/5/6/7/8>,<SatUsed:ss>,<HDOP:h.h(h)>,<Altitude:(-)aaa.a[a]>,M,<GeoidSep:(-)gg.g[g]>,M,<AgeDiff:cc.c[c]>,<DiffRef:rrrr>*<CheckSum>
  * Time, position and fix related data for a GPS receiver
@@ -701,6 +718,9 @@ typedef struct NMEA0183_DecodedData
 #endif
 #ifdef NMEA0183_DECODE_DBT
     NMEA0183_DBxdata DBT;                   //!< DBK (Depth Below Tranducer) extracted. Use if 'SentenceID' = NMEA0183_DBT
+#endif
+#ifdef NMEA0183_DECODE_DPT
+    NMEA0183_DPTdata DPT;                   //!< DPT (Depth) extracted. Use if 'SentenceID' = NMEA0183_DPT
 #endif
 #ifdef NMEA0183_DECODE_GGA
     NMEA0183_GGAdata GGA;                   //!< GGA (Global positioning system fixed data) extracted. Use if 'SentenceID' = NMEA0183_GGA
