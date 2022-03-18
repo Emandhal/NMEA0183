@@ -38,12 +38,17 @@
 //=============================================================================
 
 //-----------------------------------------------------------------------------
+#if !defined(NMEA0183_USE_INPUT_BUFFER)
+#  define NMEA0183_USE_INPUT_BUFFER
+#endif
+//-----------------------------------------------------------------------------
 #include "NMEA0183.h"
 //-----------------------------------------------------------------------------
 #ifdef NMEA0183_FLOAT_BASED_TOOLS
 #  include <math.h>
 #endif
 //-----------------------------------------------------------------------------
+
 
 
 
@@ -85,7 +90,7 @@ class NMEA0183decoder
      */
     bool IsFrameReadyToProcess(void) { NMEA0183_IsFrameReadyToProcess(&InputData); };
 
-    /*! @brief Process the NMEA0183 frame
+    /*! @brief Process the NMEA0183 frame (used with the decode structure)
      *
      * @param[out] *pData Is the decoded data
      * @return Returns an #eERRORRESULT value enum

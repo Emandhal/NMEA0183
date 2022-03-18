@@ -59,6 +59,31 @@ To set up one or more decoders in the project, you must:
 * If a frame is ready to process, use the NMEA0183_ProcessFrame() function with a NMEA0183_DecodedData structure to receive the decoded data
 * Check the NMEA0183_DecodedData.SentenceID to know which decoded data have been processed (if 'SentenceID' = NMEA0183_GGA then the data are in NMEA0183_DecodedData.GGA)
 
+C example:
+```c
+NMEA0183_DecodeInput NMEA;
+NMEA0183_DecodedData FrameData;
+
+NMEA0183_Init_NMEA0183(&NMEA);
+while (Serial.CharAvailable()) // Use your own Serial function
+{
+  NMEA0183_AddReceivedCharacter(&NMEA, Serial.Read()); // Use your own Serial function
+  if (NMEA0183_IsFrameReadyToProcess(&NMEA))
+  {
+    NMEA0183_ProcessFrame(&NMEA, &FrameData);
+    // Do what you want with the decoded data in FrameData
+  }
+}
+```
+
+Whole frame string C example:
+```cpp
+NMEA0183_DecodedData FrameData;
+
+NMEA0183_ProcessLine(NMEA_STRING_TO_PROCESS, &FrameData); // Use you own NMEA0183 string
+// Do what you want with the decoded data in FrameData
+```
+
 ## C++ version
 To set up one or more decoders in the project, you must:
 * Add each character received by using NMEA0183decoder.AddReceivedCharacter()
@@ -66,7 +91,80 @@ To set up one or more decoders in the project, you must:
 * If a frame is ready to process, use the NMEA0183decoder.NMEA0183_ProcessFrame() function with a NMEA0183_DecodedData structure to receive the decoded data
 * Check the NMEA0183_DecodedData.SentenceID to know which decoded data have been processed (if 'SentenceID' = NMEA0183_GGA then the data are in NMEA0183_DecodedData.GGA)
 
+C++ example:
+```cpp
+NMEA0183decoder NMEA;
+NMEA0183_DecodedData FrameData;
+
+while (Serial.CharAvailable()) // Use your own Serial function
+{
+  NMEA.AddReceivedCharacter(Serial.Read()); // Use your own Serial function
+  if (NMEA.IsFrameReadyToProcess())
+  {
+    ProcessFrame(&FrameData);
+    // Do what you want with the decoded data in FrameData
+  }
+}
+```
+
+Whole frame string C++ example:
+```cpp
+NMEA0183decoder NMEA;
+NMEA0183_DecodedData FrameData;
+
+NMEA.ProcessLine(NMEA_STRING_TO_PROCESS, &FrameData); // Use you own NMEA0183 string
+// Do what you want with the decoded data in FrameData
+```
+
 ## C++ GPS automated version
 To set up one or more decoders in the project, you must:
 * Add each character received by using GPSdecoder.ProcessCharacter()
 * Check the if a new data have been decoded and get the new data (example if GPSdecoder.IsNewTimeAvailable() then get the data with GPSdecoder.GetTime())
+
+C++ example:
+```cpp
+GPSdecoder GPS;
+
+while (Serial.CharAvailable()) // Use your own Serial function
+{
+  GPS.ProcessCharacter(Serial.Read()); // Use your own Serial function
+
+  if (GPS.IsNewTimeAvailable())
+  {
+    // Do what you want with GPS.GetTime()
+  }
+  if (GPS.IsNewDateAvailable())
+  {
+    // Do what you want with GPS.GetDate()
+  }
+  if (GPS.IsNewLatitudeAvailable())
+  {
+    // Do what you want with GPS.GetLatitudeInDegree()
+    // or GPS.GetLatitudeInDegreeMinute()
+    // or GPS.GetLatitudeInDegreeMinuteSeconds()
+  }
+  if (GPS.IsNewLongitudeAvailable())
+  {
+    // Do what you want with GPS.GetLongitudeInDegree()
+    // or GPS.GetLongitudeInDegreeMinute()
+    // or GPS.GetLongitudeInDegreeMinuteSeconds()
+  }
+  if (GPS.IsNewAltitudeAvailable())
+  {
+    // Do what you want with GPS.GetAltitudeInMeter()
+  }
+  if (GPS.IsNewSpeedAvailable())
+  {
+    // Do what you want with GPS.GetSpeedInKnots()
+  }
+  if (GPS.IsNewTrackAvailable())
+  {
+    // Do what you want with GPS.GetTrackInDegree()
+    // Can use GPS.TrackToCardinal() to convert to cardianl
+  }
+  if (GPS.IsNewHDOPAvailable())
+  {
+    // Do what you want with GPS.GetHDOP()
+  }
+}
+```

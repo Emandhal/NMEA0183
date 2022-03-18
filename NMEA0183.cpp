@@ -69,6 +69,7 @@ static bool __NMEA0183_ExtractTime(char** pStr, NMEA0183_Time* pData);
 //********************************************************************************************************************
 // NMEA0183 decoder API
 //********************************************************************************************************************
+#ifdef NMEA0183_USE_INPUT_BUFFER
 //=============================================================================
 // Initialize NMEA0183
 //=============================================================================
@@ -147,6 +148,7 @@ eERRORRESULT NMEA0183_AddReceivedCharacter(NMEA0183_DecodeInput* pDecoder, char 
   }
   return Error;
 }
+#endif
 //-----------------------------------------------------------------------------
 
 
@@ -304,7 +306,7 @@ bool __NMEA0183_ExtractTime(char** pStr, NMEA0183_Time* pData)
 //**********************************************************************************************************************************************************
 #ifdef NMEA0183_DECODE_AAM
 //=============================================================================
-// Process the AAM (Waypoint Arrival Alarm) sentence
+// [STATIC] Process the AAM (Waypoint Arrival Alarm) sentence
 //=============================================================================
 static eERRORRESULT NMEA0183_ProcessAAM(const char* pSentence, NMEA0183_AAMdata* pData)
 { // Format: $--AAM,<Entered:A/V>,<Waypoint:A/V>,<Circle:r.rr[r][r]>,N,<WaypointID>*<CheckSum>
@@ -345,7 +347,7 @@ static eERRORRESULT NMEA0183_ProcessAAM(const char* pSentence, NMEA0183_AAMdata*
 
 #ifdef NMEA0183_DECODE_ALM
 //=============================================================================
-// Process the ALM (GPS Almanac Data) sentence
+// [STATIC] Process the ALM (GPS Almanac Data) sentence
 //=============================================================================
 static eERRORRESULT NMEA0183_ProcessALM(const char* pSentence, NMEA0183_ALMdata* pData)
 { // Format: $--ALM,<Total:t>,<Curr:c>,<SatPRN:ss>,<WeekNum:[w][w][w]w>,<SV:vv>,<e:eeee>,<toa:yy>,<Sigma_i:iiii>,<OMEGADOT:dddd>,<rootA:rrrrrr>,<OMEGA:oooooo>,<OMEGA0:aaaaaa>,<Mo:mmmmmm>,<af0:aaa>,<af1:bbb>*<CheckSum>
@@ -399,7 +401,7 @@ static eERRORRESULT NMEA0183_ProcessALM(const char* pSentence, NMEA0183_ALMdata*
 
 #ifdef NMEA0183_DECODE_APB
 //=============================================================================
-// Process the APB (Heading/Track Controller (Autopilot) Sentence "B") sentence
+// [STATIC] Process the APB (Heading/Track Controller (Autopilot) Sentence "B") sentence
 //=============================================================================
 static eERRORRESULT NMEA0183_ProcessAPB(const char* pSentence, NMEA0183_APBdata* pData)
 { // Format: $--APB,<Status:A/V>,<Status:A/V>,<Magnitude:m.m[m][m][m]>,<L/R>,<N/K>,<A/V>,<A/V>,<BOtoD:b[.b][b]>,<M/T>,<WaypointID>,<BCPtoD:c[.c][c]>,<M/T>,<H2StoD:h[.h][h]>,<M/T>,<FAA:A/D/E/M/S/N>*<CheckSum>
@@ -442,10 +444,10 @@ static eERRORRESULT NMEA0183_ProcessAPB(const char* pSentence, NMEA0183_APBdata*
   size_t TxtPos = 0;
   while (TxtPos < (NMEA0183_APB_WAYPOINT_ID_MAX_SIZE - 1))
   {
-      if ((*pStr == '\0') || (*pStr == NMEA0183_FIELD_DELIMITER)) break;
-      pData->WaypointID[TxtPos] = *pStr;                             //*** Get char
-      ++TxtPos;
-      ++pStr;
+    if ((*pStr == '\0') || (*pStr == NMEA0183_FIELD_DELIMITER)) break;
+    pData->WaypointID[TxtPos] = *pStr;                               //*** Get char
+    ++TxtPos;
+    ++pStr;
   }
   pData->WaypointID[TxtPos] = '\0';
   NMEA0183_CHECK_FIELD_DELIMITER;
@@ -480,7 +482,7 @@ static eERRORRESULT NMEA0183_ProcessAPB(const char* pSentence, NMEA0183_APBdata*
 
 #ifdef NMEA0183_DECODE_BEC
 //=============================================================================
-// Process the BEC (Bearing and distance to waypoint - dead reckoning) sentence
+// [STATIC] Process the BEC (Bearing and distance to waypoint - dead reckoning) sentence
 //=============================================================================
 static eERRORRESULT NMEA0183_ProcessBEC(const char* pSentence, NMEA0183_BECdata* pData)
 { // Format: $--BEC,<hhmmss.zzz>,<Latitude:ddmm.mmmm[m][m][m]>,<N/S>,<Longitude:dddmm.mmmm[m][m][m]>,<E/W>,<BearingTrue:t[.t][t]>,T,<BearingMag:m[.m][m]>,M,<Distance:sss.ss[s][s]>,N,<WaypointID>*<CheckSum>
@@ -518,10 +520,10 @@ static eERRORRESULT NMEA0183_ProcessBEC(const char* pSentence, NMEA0183_BECdata*
   size_t TxtPos = 0;
   while (TxtPos < (NMEA0183_BEC_WAYPOINT_ID_MAX_SIZE - 1))
   {
-      if ((*pStr == '\0') || (*pStr == NMEA0183_CHECKSUM_DELIMITER)) break;
-      pData->WaypointID[TxtPos] = *pStr;                             //*** Get char
-      ++TxtPos;
-      ++pStr;
+    if ((*pStr == '\0') || (*pStr == NMEA0183_CHECKSUM_DELIMITER)) break;
+    pData->WaypointID[TxtPos] = *pStr;                               //*** Get char
+    ++TxtPos;
+    ++pStr;
   }
   pData->WaypointID[TxtPos] = '\0';
   if (*pStr != NMEA0183_CHECKSUM_DELIMITER) return ERR__PARSE_ERROR; // Should be a '*'
@@ -533,7 +535,7 @@ static eERRORRESULT NMEA0183_ProcessBEC(const char* pSentence, NMEA0183_BECdata*
 
 #ifdef NMEA0183_DECODE_BOD
 //=============================================================================
-// Process the BOD (Bearing - Origin to Destination) sentence
+// [STATIC] Process the BOD (Bearing - Origin to Destination) sentence
 //=============================================================================
 static eERRORRESULT NMEA0183_ProcessBOD(const char* pSentence, NMEA0183_BODdata* pData)
 { // Format: $--BOD,<BearingTrue:t[.t][t]>,T,<BearingMag:m[.m][m]>,M,<DestWaypointID>,<OriginWaypointID>*<CheckSum>
@@ -587,7 +589,7 @@ static eERRORRESULT NMEA0183_ProcessBOD(const char* pSentence, NMEA0183_BODdata*
 
 #ifdef NMEA0183_DECODE_BWW
 //=============================================================================
-// Process the BWW (Bearing - Waypoint to Waypoint) sentence
+// [STATIC] Process the BWW (Bearing - Waypoint to Waypoint) sentence
 //=============================================================================
 static eERRORRESULT NMEA0183_ProcessBWW(const char* pSentence, NMEA0183_BWWdata* pData)
 { // Format: $--BWW,<BearingTrue:t[.t][t]>,T,<BearingMag:m[.m][m]>,M,<DestWaypointID>,<OriginWaypointID>*<CheckSum>
@@ -638,7 +640,7 @@ static eERRORRESULT NMEA0183_ProcessBWW(const char* pSentence, NMEA0183_BWWdata*
 
 #if defined(NMEA0183_DECODE_DBK) || defined(NMEA0183_DECODE_DBS) || defined(NMEA0183_DECODE_DBT)
 //=============================================================================
-// Process the DBK (Depth Below Keel), DBS (Depth Below Surface), or DBT (Depth Below Tranducer) sentence
+// [STATIC] Process the DBK (Depth Below Keel), DBS (Depth Below Surface), or DBT (Depth Below Tranducer) sentence
 //=============================================================================
 static eERRORRESULT NMEA0183_ProcessDBx(const char* pSentence, NMEA0183_DBxdata* pData)
 { // Format: $--DBx,<DepthFeet:d[.d][d][d]>,f,<DepthMeter:m[.m][m][m]>,M,<DepthMeter:f[.f][f][f]>,F*<CheckSum>
@@ -669,7 +671,7 @@ static eERRORRESULT NMEA0183_ProcessDBx(const char* pSentence, NMEA0183_DBxdata*
 
 #ifdef NMEA0183_DECODE_DPT
 //=============================================================================
-// Process the DPT (Depth) sentence
+// [STATIC] Process the DPT (Depth) sentence
 //=============================================================================
 static eERRORRESULT NMEA0183_ProcessDPT(const char* pSentence, NMEA0183_DPTdata* pData)
 { // Format: $--DPT,<WaterDepth:m[.m][m][m]>,<OffsetTrans:(-)o[.o][o]>,<RangeScale:r[.r][r]>*<CheckSum>
@@ -703,7 +705,7 @@ static eERRORRESULT NMEA0183_ProcessDPT(const char* pSentence, NMEA0183_DPTdata*
 
 #ifdef NMEA0183_DECODE_FSI
 //=============================================================================
-// Process the FSI (Frequency Set Information) sentence
+// [STATIC] Process the FSI (Frequency Set Information) sentence
 //=============================================================================
 static eERRORRESULT NMEA0183_ProcessFSI(const char* pSentence, NMEA0183_FSIdata* pData)
 { // Format: $--FSI,<TxFreq:tttttt>,<RxFreq:rrrrrr>,<Mode:d/e/m/o/q/s/t/w/x/{/|>,<PowerLevel:0/1..9>*<CheckSum>
@@ -735,7 +737,7 @@ static eERRORRESULT NMEA0183_ProcessFSI(const char* pSentence, NMEA0183_FSIdata*
 
 #ifdef NMEA0183_DECODE_GGA
 //=============================================================================
-// Process the GGA (Global positioning system fixed data) sentence
+// [STATIC] Process the GGA (Global positioning system fixed data) sentence
 //=============================================================================
 static eERRORRESULT NMEA0183_ProcessGGA(const char* pSentence, NMEA0183_GGAdata* pData)
 { // Format: $--GGA,<hhmmss.zzz>,<Latitude:ddmm.mmmm[m][m][m]>,<N/S>,<Longitude:dddmm.mmmm[m][m][m]>,<E/W>,<GPSquality:0/1/2/3/4/5/6/7/8>,<SatUsed:ss>,<HDOP:h.h(h)>,<Altitude:(-)aaa.a[a]>,M,<GeoidSep:(-)gg.g[g]>,M,<AgeDiff:cc.c[c]>,<DiffRef:rrrr>*<CheckSum>
@@ -776,21 +778,21 @@ static eERRORRESULT NMEA0183_ProcessGGA(const char* pSentence, NMEA0183_GGAdata*
 
   if (*pStr == NMEA0183_FIELD_DELIMITER)
   {
-      //--- Get Age of differential GPS data (if available) ---
+    //--- Get Age of differential GPS data (if available) ---
+    ++pStr;                                                             // Parsing: Skip ','
+    pData->AgeOfDiffCorr = (uint16_t)__NMEA0183_StringToInt(&pStr, 0, 2); //*** Get age of differential GPS data <cc.c[c]> (divide by 10^2 to get the real age of differential GPS data)
+
+    if (*pStr == NMEA0183_FIELD_DELIMITER)
+    {
+      //--- Get Differential reference station ID (if available) ---
       ++pStr;                                                           // Parsing: Skip ','
-      pData->AgeOfDiffCorr = (uint16_t)__NMEA0183_StringToInt(&pStr, 0, 2); //*** Get age of differential GPS data <cc.c[c]> (divide by 10^2 to get the real age of differential GPS data)
-
-      if (*pStr == NMEA0183_FIELD_DELIMITER)
-      {
-          //--- Get Differential reference station ID (if available) ---
-          ++pStr;                                                           // Parsing: Skip ','
-          pData->DiffRefStationID = (uint16_t)__NMEA0183_StringToInt(&pStr, 0, 0); //*** Get and save differential reference station ID <rrrr>
-      }
-      else pData->DiffRefStationID = (uint16_t)NMEA0183_NO_VALUE;           //*** Set age of differential GPS data not specified
+      pData->DiffRefStationID = (uint16_t)__NMEA0183_StringToInt(&pStr, 0, 0); //*** Get and save differential reference station ID <rrrr>
+    }
+    else pData->DiffRefStationID = (uint16_t)NMEA0183_NO_VALUE;         //*** Set age of differential GPS data not specified
   }
-  else pData->AgeOfDiffCorr = (uint16_t)NMEA0183_NO_VALUE;                  //*** Set age of differential GPS data not specified
+  else pData->AgeOfDiffCorr = (uint16_t)NMEA0183_NO_VALUE;              //*** Set age of differential GPS data not specified
 
-  if (*pStr != NMEA0183_CHECKSUM_DELIMITER) return ERR__PARSE_ERROR;        // Should be a '*'
+  if (*pStr != NMEA0183_CHECKSUM_DELIMITER) return ERR__PARSE_ERROR;    // Should be a '*'
   return ERR_OK;
 }
 #endif
@@ -799,7 +801,7 @@ static eERRORRESULT NMEA0183_ProcessGGA(const char* pSentence, NMEA0183_GGAdata*
 
 #ifdef NMEA0183_DECODE_GLL
 //=============================================================================
-// Process the GLL (Geographic Position - Latitude/Longitude) sentence
+// [STATIC] Process the GLL (Geographic Position - Latitude/Longitude) sentence
 //=============================================================================
 static eERRORRESULT NMEA0183_ProcessGLL(const char* pSentence, NMEA0183_GLLdata* pData)
 { // Format: $--GLL,<Latitude:ddmm.mmmm[m][m][m]>,<N/S>,<Longitude:dddmm.mmmm[m][m][m]>,<E/W>,<hhmmss.zzz>,<Status:A/V>,<FAA:A/D/E/M/S/N>*<CheckSum>
@@ -833,7 +835,7 @@ static eERRORRESULT NMEA0183_ProcessGLL(const char* pSentence, NMEA0183_GLLdata*
 
 #ifdef NMEA0183_DECODE_GSA
 //=============================================================================
-// Process the GSA (GNSS DOP and Active Satellites) sentence
+// [STATIC] Process the GSA (GNSS DOP and Active Satellites) sentence
 //=============================================================================
 static eERRORRESULT NMEA0183_ProcessGSA(const char* pSentence, NMEA0183_GSAdata* pData)
 { // Format: $--GSA,<Mode1:A/M>,<Mode2:1/2/3>,[<Sat1:xx>],[<Sat2:xx>],[<Sat3:xx>],[<Sat4:xx>],[<Sat5:xx>],[<Sat6:xx>],[<Sat7:xx>],[<Sat8:xx>],[<Sat9:xx>],[<Sat10:xx>],[<Sat11:xx>],[<Sat12:xx>],<PDOP:p.p>,<HDOP:h.h>,<VDOP:v.v>*<CheckSum>
@@ -873,7 +875,7 @@ static eERRORRESULT NMEA0183_ProcessGSA(const char* pSentence, NMEA0183_GSAdata*
 
 #ifdef NMEA0183_DECODE_GSV
 //=============================================================================
-// Process the GSV (GNSS Satellites in View) sentence
+// [STATIC] Process the GSV (GNSS Satellites in View) sentence
 //=============================================================================
 static eERRORRESULT NMEA0183_ProcessGSV(const char* pSentence, NMEA0183_GSVdata* pData)
 { // Format: $--GSV,<Total:t>,<Curr:c>,<SatCount:ss>,<SV1:<SatNum:nn>,<Elev:ee>,<Azim:aaa>,<SNR:rr>>[,<SV2:<SatNum:nn>,<Elev:ee>,<Azim:aaa>,<SNR:rr>>][,<SV3:<SatNum:nn>,<Elev:ee>,<Azim:aaa>,<SNR:rr>>][,<SV4:<SatNum:nn>,<Elev:ee>,<Azim:aaa>,<SNR:rr>>],<Text>*<CheckSum>
@@ -914,7 +916,7 @@ static eERRORRESULT NMEA0183_ProcessGSV(const char* pSentence, NMEA0183_GSVdata*
 
 #ifdef NMEA0183_DECODE_HDG
 //=============================================================================
-// Process the HDG (Heading - Deviation and Variation) sentence
+// [STATIC] Process the HDG (Heading - Deviation and Variation) sentence
 //=============================================================================
 static eERRORRESULT NMEA0183_ProcessHDG(const char* pSentence, NMEA0183_HDGdata* pData)
 { // Format: $--HDG,<Heading:hh.h[h]>,<MagDev:dd.d[d]>,<E/W>,<MagVar:vv.v[v]>,<E/W>*<CheckSum>
@@ -954,7 +956,7 @@ static eERRORRESULT NMEA0183_ProcessHDG(const char* pSentence, NMEA0183_HDGdata*
 
 #ifdef NMEA0183_DECODE_HDM
 //=============================================================================
-// Process the HDM (Heading - Magnetic) sentence
+// [STATIC] Process the HDM (Heading - Magnetic) sentence
 //=============================================================================
 static eERRORRESULT NMEA0183_ProcessHDM(const char* pSentence, NMEA0183_HDMdata* pData)
 { // Format: $--HDM,<Heading:hh.h[h]>,M,<E/W>*<CheckSum>
@@ -975,7 +977,7 @@ static eERRORRESULT NMEA0183_ProcessHDM(const char* pSentence, NMEA0183_HDMdata*
 
 #ifdef NMEA0183_DECODE_HDT
 //=============================================================================
-// Process the HDT (Heading - True) sentence
+// [STATIC] Process the HDT (Heading - True) sentence
 //=============================================================================
 static eERRORRESULT NMEA0183_ProcessHDT(const char* pSentence, NMEA0183_HDTdata* pData)
 { // Format: $--HDT,<Heading:hh.h[h]>,T,<E/W>*<CheckSum>
@@ -996,20 +998,20 @@ static eERRORRESULT NMEA0183_ProcessHDT(const char* pSentence, NMEA0183_HDTdata*
 
 #ifdef NMEA0183_DECODE_MTW
 //=============================================================================
-// Process the MTW (Water Temperature) sentence
+// [STATIC] Process the MTW (Water Temperature) sentence
 //=============================================================================
 static eERRORRESULT NMEA0183_ProcessMTW(const char* pSentence, NMEA0183_MTWdata* pData)
 { // Format: $--MTW,<WaterTemp:t.t[t]>,C*<CheckSum>
-    char* pStr = (char*)pSentence;
+  char* pStr = (char*)pSentence;
 
-    //--- Get Water Temperature ---
-    pData->WaterTemp = (int16_t)__NMEA0183_StringToInt(&pStr, 0, 2);   //*** Get and save water temperature <hh.h[h]> (divide by 10^2 to get the real temperature)
-    NMEA0183_CHECK_FIELD_DELIMITER;
-    if (*pStr != 'C') return ERR__PARSE_ERROR;                         // Parsing: Should be 'C'
-    ++pStr;
+  //--- Get Water Temperature ---
+  pData->WaterTemp = (int16_t)__NMEA0183_StringToInt(&pStr, 0, 2);   //*** Get and save water temperature <hh.h[h]> (divide by 10^2 to get the real temperature)
+  NMEA0183_CHECK_FIELD_DELIMITER;
+  if (*pStr != 'C') return ERR__PARSE_ERROR;                         // Parsing: Should be 'C'
+  ++pStr;
 
-    if (*pStr != NMEA0183_CHECKSUM_DELIMITER) return ERR__PARSE_ERROR; // Should be a '*'
-    return ERR_OK;
+  if (*pStr != NMEA0183_CHECKSUM_DELIMITER) return ERR__PARSE_ERROR; // Should be a '*'
+  return ERR_OK;
 }
 #endif
 
@@ -1017,7 +1019,7 @@ static eERRORRESULT NMEA0183_ProcessMTW(const char* pSentence, NMEA0183_MTWdata*
 
 #ifdef NMEA0183_DECODE_MWV
 //=============================================================================
-// Process the MWV (Wind Speed and Angle) sentence
+// [STATIC] Process the MWV (Wind Speed and Angle) sentence
 //=============================================================================
 static eERRORRESULT NMEA0183_ProcessMWV(const char* pSentence, NMEA0183_MWVdata* pData)
 { // Format: $--MWV,<WindAngle:www[.w][w]>,<T/R>,<WindSpeed:ss[.s][s]>,<K/M/N/S>,<A/V>*<CheckSum>
@@ -1050,7 +1052,7 @@ static eERRORRESULT NMEA0183_ProcessMWV(const char* pSentence, NMEA0183_MWVdata*
 
 #ifdef NMEA0183_DECODE_RMC
 //=============================================================================
-// Process the RMC (Recommended Minimum sentence C) sentence
+// [STATIC] Process the RMC (Recommended Minimum sentence C) sentence
 //=============================================================================
 static eERRORRESULT NMEA0183_ProcessRMC(const char* pSentence, NMEA0183_RMCdata* pData)
 { // Format: $--RMC,<hhmmss.zzz>,<Status:A/V>,<Latitude:ddmm.mmmm[m][m][m]>,<N/S>,<Longitude:dddmm.mmmm[m][m][m]>,<E/W>,<Speed:sss.ss[s][s]>,<Track:ttt.tt[t][t]>,<ddmmyy>,<MagVar:vv.v[v]>,<E/W>[,<FAA:A/D/E/M/S/N>][,<NavStatus:S/C/U/V>]*<CheckSum>
@@ -1114,7 +1116,7 @@ static eERRORRESULT NMEA0183_ProcessRMC(const char* pSentence, NMEA0183_RMCdata*
 
 #ifdef NMEA0183_DECODE_TXT
 //=============================================================================
-// Process the TXT (Text Transmission) sentence
+// [STATIC] Process the TXT (Text Transmission) sentence
 //=============================================================================
 static eERRORRESULT NMEA0183_ProcessTXT(const char* pSentence, NMEA0183_TXTdata* pData)
 { // Format: $--TXT,<Total:tt>,<Curr:cc>,<TextID:ii>,<Text>,*<CheckSum>
@@ -1137,10 +1139,10 @@ static eERRORRESULT NMEA0183_ProcessTXT(const char* pSentence, NMEA0183_TXTdata*
     if ((*pStr == '\0') || (*pStr == NMEA0183_CHECKSUM_DELIMITER)) break;
     if (*pStr != NMEA0183_CHAR_HEX_DELIMITER)
     {
-        pData->TextMessage[TxtPos] = *pStr; //*** Get char
-        ++pStr;
+      pData->TextMessage[TxtPos] = *pStr; //*** Get char
+      ++pStr;
     }
-    else                                    // '^' detected
+    else                                  // '^' detected
     {
       ++pStr;
       if ((*pStr == '\0') || (*pStr == NMEA0183_CHECKSUM_DELIMITER))
@@ -1159,37 +1161,37 @@ static eERRORRESULT NMEA0183_ProcessTXT(const char* pSentence, NMEA0183_TXTdata*
 
 #ifdef NMEA0183_DECODE_VHW
 //=============================================================================
-// Process the VHW (Water Speed and Heading) sentence
+// [STATIC] Process the VHW (Water Speed and Heading) sentence
 //=============================================================================
 static eERRORRESULT NMEA0183_ProcessVHW(const char* pSentence, NMEA0183_VHWdata* pData)
 { // Format: $--VHW,<CourseTrue:t.t[t][t][t]>,T,<CourseMag:m.m[m][m][m]>,M,<SpeedKnots:k.k[k][k][k]>,N,<SpeedKmHr:h.h[h][h][h]>,K*<CheckSum>
-    char* pStr = (char*)pSentence;
+  char* pStr = (char*)pSentence;
 
-    //--- Get Heading ---
-    pData->HeadingTrue = (uint32_t)__NMEA0183_StringToInt(&pStr, 0, 4);     //*** Get heading in degrees True <ttt.t[t][t][t]> (divide by 10^4 to get the real track)
-    NMEA0183_CHECK_FIELD_DELIMITER;
-    if (*pStr != 'T') return ERR__PARSE_ERROR;                              // Parsing: Should be 'T'
-    ++pStr;                                                                 // Parsing: Skip 'T'
-    NMEA0183_CHECK_FIELD_DELIMITER;
-    pData->HeadingMagnetic = (uint32_t)__NMEA0183_StringToInt(&pStr, 0, 4); //*** Get heading in degrees Magnetic <mmm.m[m][m][m]> (divide by 10^4 to get the real track)
-    NMEA0183_CHECK_FIELD_DELIMITER;
-    if (*pStr != 'M') return ERR__PARSE_ERROR;                              // Parsing: Should be 'M'
-    ++pStr;                                                                 // Parsing: Skip 'M'
-    NMEA0183_CHECK_FIELD_DELIMITER;
+  //--- Get Heading ---
+  pData->HeadingTrue = (uint32_t)__NMEA0183_StringToInt(&pStr, 0, 4);     //*** Get heading in degrees True <ttt.t[t][t][t]> (divide by 10^4 to get the real track)
+  NMEA0183_CHECK_FIELD_DELIMITER;
+  if (*pStr != 'T') return ERR__PARSE_ERROR;                              // Parsing: Should be 'T'
+  ++pStr;                                                                 // Parsing: Skip 'T'
+  NMEA0183_CHECK_FIELD_DELIMITER;
+  pData->HeadingMagnetic = (uint32_t)__NMEA0183_StringToInt(&pStr, 0, 4); //*** Get heading in degrees Magnetic <mmm.m[m][m][m]> (divide by 10^4 to get the real track)
+  NMEA0183_CHECK_FIELD_DELIMITER;
+  if (*pStr != 'M') return ERR__PARSE_ERROR;                              // Parsing: Should be 'M'
+  ++pStr;                                                                 // Parsing: Skip 'M'
+  NMEA0183_CHECK_FIELD_DELIMITER;
 
-    //--- Get Speed ---
-    pData->SpeedKnots = (uint32_t)__NMEA0183_StringToInt(&pStr, 0, 4);      //*** Get speed over the ground in knots <kkk.k[k][k][k]> (divide by 10^4 to get the real track)
-    NMEA0183_CHECK_FIELD_DELIMITER;
-    if (*pStr != 'N') return ERR__PARSE_ERROR;                              // Parsing: Should be 'N'
-    ++pStr;                                                                 // Parsing: Skip 'N'
-    NMEA0183_CHECK_FIELD_DELIMITER;
-    pData->SpeedKmHr = (uint32_t)__NMEA0183_StringToInt(&pStr, 0, 4);       //*** Get speed over the ground in km/hr <hhh.h[h][h][h]> (divide by 10^4 to get the real track)
-    NMEA0183_CHECK_FIELD_DELIMITER;
-    if (*pStr != 'K') return ERR__PARSE_ERROR;                              // Parsing: Should be 'K'
-    ++pStr;                                                                 // Parsing: Skip 'K'
+  //--- Get Speed ---
+  pData->SpeedKnots = (uint32_t)__NMEA0183_StringToInt(&pStr, 0, 4);      //*** Get speed over the ground in knots <kkk.k[k][k][k]> (divide by 10^4 to get the real track)
+  NMEA0183_CHECK_FIELD_DELIMITER;
+  if (*pStr != 'N') return ERR__PARSE_ERROR;                              // Parsing: Should be 'N'
+  ++pStr;                                                                 // Parsing: Skip 'N'
+  NMEA0183_CHECK_FIELD_DELIMITER;
+  pData->SpeedKmHr = (uint32_t)__NMEA0183_StringToInt(&pStr, 0, 4);       //*** Get speed over the ground in km/hr <hhh.h[h][h][h]> (divide by 10^4 to get the real track)
+  NMEA0183_CHECK_FIELD_DELIMITER;
+  if (*pStr != 'K') return ERR__PARSE_ERROR;                              // Parsing: Should be 'K'
+  ++pStr;                                                                 // Parsing: Skip 'K'
 
-    if (*pStr != NMEA0183_CHECKSUM_DELIMITER) return ERR__PARSE_ERROR;      // Should be a '*'
-    return ERR_OK;
+  if (*pStr != NMEA0183_CHECKSUM_DELIMITER) return ERR__PARSE_ERROR;      // Should be a '*'
+  return ERR_OK;
 }
 #endif
 
@@ -1197,7 +1199,7 @@ static eERRORRESULT NMEA0183_ProcessVHW(const char* pSentence, NMEA0183_VHWdata*
 
 #ifdef NMEA0183_DECODE_VTG
 //=============================================================================
-// Process the VTG (Course Over Ground and Ground Speed) sentence
+// [STATIC] Process the VTG (Course Over Ground and Ground Speed) sentence
 //=============================================================================
 static eERRORRESULT NMEA0183_ProcessVTG(const char* pSentence, NMEA0183_VTGdata* pData)
 { // Format: $--VTG,<CourseTrue:t.t[t][t][t]>[,T],<CourseMag:m.m[m][m][m]>[,M],<SpeedKnots:k.k[k][k][k]>[,N],<SpeedKmHr:h.h[h][h][h]>[,K][,<FAA:A/D/E/M/S/N>]*<CheckSum>
@@ -1239,7 +1241,7 @@ static eERRORRESULT NMEA0183_ProcessVTG(const char* pSentence, NMEA0183_VTGdata*
 
 #ifdef NMEA0183_DECODE_ZDA
 //=============================================================================
-// Process the ZDA (Time & Date) sentence
+// [STATIC] Process the ZDA (Time & Date) sentence
 //=============================================================================
 static eERRORRESULT NMEA0183_ProcessZDA(const char* pSentence, NMEA0183_ZDAdata* pData)
 { // Format: $--ZDA,<hhmmss.zzz>,<Day:dd>,<Month:mm>,<Year:yyyy>,<LocalHour:(-)hh>,<LocalMinute:mm>*<CheckSum>
@@ -1273,6 +1275,7 @@ static eERRORRESULT NMEA0183_ProcessZDA(const char* pSentence, NMEA0183_ZDAdata*
 
 
 //**********************************************************************************************************************************************************
+#ifdef NMEA0183_USE_INPUT_BUFFER
 //=============================================================================
 // Get decoder state
 //=============================================================================
@@ -1295,6 +1298,7 @@ bool NMEA0183_IsFrameReadyToProcess(NMEA0183_DecodeInput* pDecoder)
 #endif
   return pDecoder->State == NMEA0183_TO_PROCESS;
 }
+#endif
 
 
 //=============================================================================

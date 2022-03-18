@@ -829,7 +829,7 @@ struct NMEA0183_InputBuffer
 //-----------------------------------------------------------------------------
 
 
-
+#ifdef NMEA0183_USE_INPUT_BUFFER
 /*! @brief Initialize GPS pins and port
  *
  * @param[in] *pDecoder Is the decode input to initialize
@@ -862,7 +862,7 @@ eNMEA0183_State NMEA0183_GetDecoderState(NMEA0183_DecodeInput* pDecoder);
  */
 bool NMEA0183_IsFrameReadyToProcess(NMEA0183_DecodeInput* pDecoder);
 
-/*! @brief Process the NMEA0183 frame
+/*! @brief Process the NMEA0183 frame (used with the decode structure)
  *
  * @param[in] *pDecoder Is the decode input to use
  * @param[out] *pData Is the decoded data
