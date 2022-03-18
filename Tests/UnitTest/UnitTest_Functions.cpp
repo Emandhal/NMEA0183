@@ -8,6 +8,7 @@ using namespace Microsoft::VisualStudio::CppUnitTestFramework;
 
 namespace Microsoft { namespace VisualStudio { namespace CppUnitTestFramework
 {
+    template<> inline std::wstring ToString<uint16_t>(const uint16_t& t) { RETURN_WIDE_STRING(t); }
     template<> inline std::wstring ToString<eERRORRESULT>(const eERRORRESULT& t) { RETURN_WIDE_STRING(t); }
     template<> inline std::wstring ToString<eNMEA0183_State>(const eNMEA0183_State& t) { RETURN_WIDE_STRING(t); }
     template<> inline std::wstring ToString<eNMEA0183_TalkerID>(const eNMEA0183_TalkerID& t) { RETURN_WIDE_STRING(t); }
@@ -136,8 +137,138 @@ namespace NMEA0183test
             Assert::AreEqual(NMEA0183_UNKNOWN, FrameData.SentenceID, L"Test (Unknown frame), SentenceID should be NMEA0183_UNKNOWN");
             Assert::AreEqual(0, strncmp(&TEST_UNKNOWN_FRAME[0], &FrameData.Frame[0], strlen(TEST_UNKNOWN_FRAME) - 2), L"Test (Unknown frame), FrameData.Frame should be TEST_UNKNOWN_FRAME");
         }
+
+        TEST_METHOD(TestMethod_ProcessLine)
+        {
+            NMEA0183decoder NMEA;
+            NMEA0183_DecodedData FrameData;
+            eERRORRESULT LastError = ERR_OK;
+
+            //--- Test (No Start error) ---
+            const char* const TEST_NO_START_FRAME = "TestFrame*FF\r\n";
+            LastError = NMEA.ProcessLine(TEST_NO_START_FRAME, &FrameData);
+            Assert::AreEqual(ERR__BAD_FRAME_TYPE, LastError, L"Test (No Start error), error should be ERR__BAD_FRAME_TYPE");
+            Assert::AreEqual(false, FrameData.ParseIsValid, L"Test (No Start error), ParseIsValid should be false");
+
+            //--- Test (No CRC error) ---
+            const char* const TEST_NO_CRC_FRAME = "$TestFrame\r\n";
+            LastError = NMEA.ProcessLine(TEST_NO_CRC_FRAME, &FrameData);
+            Assert::AreEqual(ERR__CRC_ERROR, LastError, L"Test (No CRC error), error should be ERR__CRC_ERROR");
+            Assert::AreEqual(false, FrameData.ParseIsValid, L"Test (No CRC error), ParseIsValid should be false");
+
+            //--- Test (CRC error) ---
+            const char* const TEST_BAD_CRC_FRAME = "$TestFrame*FF\r\n";
+            LastError = NMEA.ProcessLine(TEST_BAD_CRC_FRAME, &FrameData);
+            Assert::AreEqual(ERR__CRC_ERROR, LastError, L"Test (CRC error), error should be ERR__CRC_ERROR");
+            Assert::AreEqual(false, FrameData.ParseIsValid, L"Test (CRC error), ParseIsValid should be false");
+
+            //--- Test (Unknown frame) ---
+            const char* const TEST_UNKNOWN_FRAME = "$XXZZZ,data,00*4A\r\n";
+            LastError = NMEA.ProcessLine(TEST_UNKNOWN_FRAME, &FrameData);
+            Assert::AreEqual(ERR__UNKNOWN_ELEMENT, LastError, L"Test (Unknown frame), error should be ERR__UNKNOWN_ELEMENT");
+            Assert::AreEqual(false, FrameData.ParseIsValid, L"Test (Unknown frame), ParseIsValid should be false");
+            Assert::AreEqual((eNMEA0183_TalkerID)0x5858, FrameData.TalkerID, L"Test (Unknown frame), TalkerID should be 0x5858");
+            Assert::AreEqual(NMEA0183_UNKNOWN, FrameData.SentenceID, L"Test (Unknown frame), SentenceID should be NMEA0183_UNKNOWN");
+            Assert::AreEqual(0, strncmp(&TEST_UNKNOWN_FRAME[0], &FrameData.Frame[0], strlen(TEST_UNKNOWN_FRAME) - 2), L"Test (Unknown frame), FrameData.Frame should be TEST_UNKNOWN_FRAME");
+
+            //=== Test (Full Data) ============================================
+            const char* const TEST_RMC_FULL_DATA_FRAME = "$GPRMC,225446,A,4916.45,N,12311.12,W,000.5,054.7,191194,020.3,E,A,S*7A\r\n";
+            LastError = NMEA.ProcessLine(TEST_RMC_FULL_DATA_FRAME, &FrameData);
+            Assert::AreEqual(ERR_OK, LastError, L"Test (Full Data), error should be ERR_OK");
+            //--- Test data ---
+            Assert::AreEqual(true, FrameData.ParseIsValid, L"Test (Full Data), ParseIsValid should be true");
+            Assert::AreEqual(NMEA0183_GP, FrameData.TalkerID, L"Test (Full Data), TalkerID should be NMEA0183_GP");
+            Assert::AreEqual(NMEA0183_RMC, FrameData.SentenceID, L"Test (Full Data), SentenceID should be NMEA0183_RMC");
+            Assert::AreEqual((uint8_t)22, FrameData.RMC.Time.Hour, L"Test (Full Data), Time.Hour should be 22");
+            Assert::AreEqual((uint8_t)54, FrameData.RMC.Time.Minute, L"Test (Full Data), Time.Minute should be 54");
+            Assert::AreEqual((uint8_t)46, FrameData.RMC.Time.Second, L"Test (Full Data), Time.Second should be 46");
+            Assert::AreEqual((uint16_t)0xFFFF, FrameData.RMC.Time.MilliS, L"Test (Full Data), Time.MilliS should be 0xFFFF");
+            Assert::AreEqual('A', FrameData.RMC.Status, L"Test (Full Data), Status should be 'A'");
+            Assert::AreEqual('N', FrameData.RMC.Latitude.Direction, L"Test (Full Data), Latitude.Direction should be 'N'");
+            Assert::AreEqual((uint8_t)49, FrameData.RMC.Latitude.Degree, L"Test (Full Data), Latitude.Degree should be 49");
+            Assert::AreEqual(164500000u, FrameData.RMC.Latitude.Minute, L"Test (Full Data), Latitude.Minute should be 164500000");
+            Assert::AreEqual('W', FrameData.RMC.Longitude.Direction, L"Test (Full Data), Longitude.Direction should be 'W'");
+            Assert::AreEqual((uint8_t)123, FrameData.RMC.Longitude.Degree, L"Test (Full Data), Longitude.Degree should be 123");
+            Assert::AreEqual(111200000u, FrameData.RMC.Longitude.Minute, L"Test (Full Data), Longitude.Minute should be 111200000");
+            Assert::AreEqual(5000u, FrameData.RMC.Speed, L"Test (Full Data), Speed should be 5000");
+            Assert::AreEqual(547000u, FrameData.RMC.Track, L"Test (Full Data), Track should be 547000");
+            Assert::AreEqual((uint8_t)19, FrameData.RMC.Date.Day, L"Test (Full Data), Date.Day should be 19");
+            Assert::AreEqual((uint8_t)11, FrameData.RMC.Date.Month, L"Test (Full Data), Date.Month should be 11");
+            Assert::AreEqual((uint16_t)94, FrameData.RMC.Date.Year, L"Test (Full Data), Date.Year should be 94");
+            Assert::AreEqual((uint16_t)2030, FrameData.RMC.Variation.Value, L"Test (Full Data), Variation.Value should be 2030");
+            Assert::AreEqual('E', FrameData.RMC.Variation.Direction, L"Test (Full Data), Variation.Direction should be 'E'");
+            Assert::AreEqual('A', FrameData.RMC.FAAmode, L"Test (Full Data), FAAmode should be 'A'");
+            Assert::AreEqual('S', FrameData.RMC.NavigationStatus, L"Test (Full Data), NavigationStatus should be 'S'");
+        }
     };
 
+
+    TEST_CLASS(WraperlessDirectString)
+    {
+
+    public:
+        TEST_METHOD(TestMethod_ProcessLine)
+        {
+            NMEA0183_DecodedData FrameData;
+            eERRORRESULT LastError = ERR_OK;
+
+            //--- Test (No Start error) ---
+            const char* const TEST_NO_START_FRAME = "TestFrame*FF\r\n";
+            LastError = NMEA0183_ProcessLine(TEST_NO_START_FRAME, &FrameData);
+            Assert::AreEqual(ERR__BAD_FRAME_TYPE, LastError, L"Test (No Start error), error should be ERR__BAD_FRAME_TYPE");
+            Assert::AreEqual(false, FrameData.ParseIsValid, L"Test (No Start error), ParseIsValid should be false");
+
+            //--- Test (No CRC error) ---
+            const char* const TEST_NO_CRC_FRAME = "$TestFrame\r\n";
+            LastError = NMEA0183_ProcessLine(TEST_NO_CRC_FRAME, &FrameData);
+            Assert::AreEqual(ERR__CRC_ERROR, LastError, L"Test (No CRC error), error should be ERR__CRC_ERROR");
+            Assert::AreEqual(false, FrameData.ParseIsValid, L"Test (No CRC error), ParseIsValid should be false");
+
+            //--- Test (CRC error) ---
+            const char* const TEST_BAD_CRC_FRAME = "$TestFrame*FF\r\n";
+            LastError = NMEA0183_ProcessLine(TEST_BAD_CRC_FRAME, &FrameData);
+            Assert::AreEqual(ERR__CRC_ERROR, LastError, L"Test (CRC error), error should be ERR__CRC_ERROR");
+            Assert::AreEqual(false, FrameData.ParseIsValid, L"Test (CRC error), ParseIsValid should be false");
+
+            //--- Test (Unknown frame) ---
+            const char* const TEST_UNKNOWN_FRAME = "$XXZZZ,data,00*4A\r\n";
+            LastError = NMEA0183_ProcessLine(TEST_UNKNOWN_FRAME, &FrameData);
+            Assert::AreEqual(ERR__UNKNOWN_ELEMENT, LastError, L"Test (Unknown frame), error should be ERR__UNKNOWN_ELEMENT");
+            Assert::AreEqual(false, FrameData.ParseIsValid, L"Test (Unknown frame), ParseIsValid should be false");
+            Assert::AreEqual((eNMEA0183_TalkerID)0x5858, FrameData.TalkerID, L"Test (Unknown frame), TalkerID should be 0x5858");
+            Assert::AreEqual(NMEA0183_UNKNOWN, FrameData.SentenceID, L"Test (Unknown frame), SentenceID should be NMEA0183_UNKNOWN");
+            Assert::AreEqual(0, strncmp(&TEST_UNKNOWN_FRAME[0], &FrameData.Frame[0], strlen(TEST_UNKNOWN_FRAME) - 2), L"Test (Unknown frame), FrameData.Frame should be TEST_UNKNOWN_FRAME");
+
+            //=== Test (Full Data) ============================================
+            const char* const TEST_RMC_FULL_DATA_FRAME = "$GPRMC,225446,A,4916.45,N,12311.12,W,000.5,054.7,191194,020.3,E,A,S*7A\r\n";
+            LastError = NMEA0183_ProcessLine(TEST_RMC_FULL_DATA_FRAME, &FrameData);
+            Assert::AreEqual(ERR_OK, LastError, L"Test (Full Data), error should be ERR_OK");
+            //--- Test data ---
+            Assert::AreEqual(true, FrameData.ParseIsValid, L"Test (Full Data), ParseIsValid should be true");
+            Assert::AreEqual(NMEA0183_GP, FrameData.TalkerID, L"Test (Full Data), TalkerID should be NMEA0183_GP");
+            Assert::AreEqual(NMEA0183_RMC, FrameData.SentenceID, L"Test (Full Data), SentenceID should be NMEA0183_RMC");
+            Assert::AreEqual((uint8_t)22, FrameData.RMC.Time.Hour, L"Test (Full Data), Time.Hour should be 22");
+            Assert::AreEqual((uint8_t)54, FrameData.RMC.Time.Minute, L"Test (Full Data), Time.Minute should be 54");
+            Assert::AreEqual((uint8_t)46, FrameData.RMC.Time.Second, L"Test (Full Data), Time.Second should be 46");
+            Assert::AreEqual((uint16_t)0xFFFF, FrameData.RMC.Time.MilliS, L"Test (Full Data), Time.MilliS should be 0xFFFF");
+            Assert::AreEqual('A', FrameData.RMC.Status, L"Test (Full Data), Status should be 'A'");
+            Assert::AreEqual('N', FrameData.RMC.Latitude.Direction, L"Test (Full Data), Latitude.Direction should be 'N'");
+            Assert::AreEqual((uint8_t)49, FrameData.RMC.Latitude.Degree, L"Test (Full Data), Latitude.Degree should be 49");
+            Assert::AreEqual(164500000u, FrameData.RMC.Latitude.Minute, L"Test (Full Data), Latitude.Minute should be 164500000");
+            Assert::AreEqual('W', FrameData.RMC.Longitude.Direction, L"Test (Full Data), Longitude.Direction should be 'W'");
+            Assert::AreEqual((uint8_t)123, FrameData.RMC.Longitude.Degree, L"Test (Full Data), Longitude.Degree should be 123");
+            Assert::AreEqual(111200000u, FrameData.RMC.Longitude.Minute, L"Test (Full Data), Longitude.Minute should be 111200000");
+            Assert::AreEqual(5000u, FrameData.RMC.Speed, L"Test (Full Data), Speed should be 5000");
+            Assert::AreEqual(547000u, FrameData.RMC.Track, L"Test (Full Data), Track should be 547000");
+            Assert::AreEqual((uint8_t)19, FrameData.RMC.Date.Day, L"Test (Full Data), Date.Day should be 19");
+            Assert::AreEqual((uint8_t)11, FrameData.RMC.Date.Month, L"Test (Full Data), Date.Month should be 11");
+            Assert::AreEqual((uint16_t)94, FrameData.RMC.Date.Year, L"Test (Full Data), Date.Year should be 94");
+            Assert::AreEqual((uint16_t)2030, FrameData.RMC.Variation.Value, L"Test (Full Data), Variation.Value should be 2030");
+            Assert::AreEqual('E', FrameData.RMC.Variation.Direction, L"Test (Full Data), Variation.Direction should be 'E'");
+            Assert::AreEqual('A', FrameData.RMC.FAAmode, L"Test (Full Data), FAAmode should be 'A'");
+            Assert::AreEqual('S', FrameData.RMC.NavigationStatus, L"Test (Full Data), NavigationStatus should be 'S'");
+        }
+    };
 
 
 #ifdef NMEA0183_FLOAT_BASED_TOOLS

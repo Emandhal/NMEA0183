@@ -1302,7 +1302,113 @@ bool NMEA0183_IsFrameReadyToProcess(NMEA0183_DecodeInput* pDecoder)
 
 
 //=============================================================================
-// Process the NMEA0183 frame
+// [STATIC] Decode the NMEA0183 sentence
+//=============================================================================
+static eERRORRESULT __NMEA0183_DecodeSentence(const char* pRaw, NMEA0183_DecodedData* pData)
+{
+  eERRORRESULT Error = ERR_OK;
+
+  //--- Select sentence ---
+  char* pStr = (char*)&pRaw[1];                                                               // Parsing: Skip the '$' (start delimiter)
+  pData->TalkerID   = (eNMEA0183_TalkerID)NMEA0183_TALKER_ID(pStr[0], pStr[1]);               // Extract talker ID
+  pData->SentenceID = (eNMEA0183_SentencesID)NMEA0183_SENTENCE_ID(pStr[2], pStr[3], pStr[4]); // Extract sentence ID
+  pStr += 5;                                                                                  // Skip Talker and Sentence IDs
+  if (*pStr != NMEA0183_FIELD_DELIMITER) pData->SentenceID = NMEA0183_UNKNOWN;                // Sentence ID >3 chars so unknown by this library. User needs to parce externaly
+  while ((*pStr != NMEA0183_FIELD_DELIMITER) && (*pStr != 0)) ++pStr;                         // Go to the end of the field or the end of the string
+  if (*pStr != NMEA0183_FIELD_DELIMITER) return ERR__PARSE_ERROR; ++pStr;                     // Check field delimiter
+
+  //--- Parse sentence ---
+  switch (pData->SentenceID)
+  {
+#ifdef NMEA0183_DECODE_AAM
+    case NMEA0183_AAM: Error = NMEA0183_ProcessAAM(pStr, &pData->AAM); break;
+#endif
+#ifdef NMEA0183_DECODE_ALM
+    case NMEA0183_ALM: Error = NMEA0183_ProcessALM(pStr, &pData->ALM); break;
+#endif
+#ifdef NMEA0183_DECODE_APB
+    case NMEA0183_APB: Error = NMEA0183_ProcessAPB(pStr, &pData->APB); break;
+#endif
+#ifdef NMEA0183_DECODE_BEC
+    case NMEA0183_BEC: Error = NMEA0183_ProcessBEC(pStr, &pData->BEC); break;
+#endif
+#ifdef NMEA0183_DECODE_BOD
+    case NMEA0183_BOD: Error = NMEA0183_ProcessBOD(pStr, &pData->BOD); break;
+#endif
+#ifdef NMEA0183_DECODE_BWW
+    case NMEA0183_BWW: Error = NMEA0183_ProcessBWW(pStr, &pData->BWW); break;
+#endif
+#ifdef NMEA0183_DECODE_DBK
+    case NMEA0183_DBK: Error = NMEA0183_ProcessDBx(pStr, &pData->DBK); break;
+#endif
+#ifdef NMEA0183_DECODE_DBS
+    case NMEA0183_DBS: Error = NMEA0183_ProcessDBx(pStr, &pData->DBS); break;
+#endif
+#ifdef NMEA0183_DECODE_DBT
+    case NMEA0183_DBT: Error = NMEA0183_ProcessDBx(pStr, &pData->DBT); break;
+#endif
+#ifdef NMEA0183_DECODE_DPT
+    case NMEA0183_DPT: Error = NMEA0183_ProcessDPT(pStr, &pData->DPT); break;
+#endif
+#ifdef NMEA0183_DECODE_FSI
+    case NMEA0183_FSI: Error = NMEA0183_ProcessFSI(pStr, &pData->FSI); break;
+#endif
+#ifdef NMEA0183_DECODE_GGA
+    case NMEA0183_GGA: Error = NMEA0183_ProcessGGA(pStr, &pData->GGA); break;
+#endif
+#ifdef NMEA0183_DECODE_GLL
+    case NMEA0183_GLL: Error = NMEA0183_ProcessGLL(pStr, &pData->GLL); break;
+#endif
+#ifdef NMEA0183_DECODE_GSA
+    case NMEA0183_GSA: Error = NMEA0183_ProcessGSA(pStr, &pData->GSA); break;
+#endif
+#ifdef NMEA0183_DECODE_GSV
+    case NMEA0183_GSV: Error = NMEA0183_ProcessGSV(pStr, &pData->GSV); break;
+#endif
+#ifdef NMEA0183_DECODE_HDG
+    case NMEA0183_HDG: Error = NMEA0183_ProcessHDG(pStr, &pData->HDG); break;
+#endif
+#ifdef NMEA0183_DECODE_HDM
+    case NMEA0183_HDM: Error = NMEA0183_ProcessHDM(pStr, &pData->HDM); break;
+#endif
+#ifdef NMEA0183_DECODE_HDT
+    case NMEA0183_HDT: Error = NMEA0183_ProcessHDT(pStr, &pData->HDT); break;
+#endif
+#ifdef NMEA0183_DECODE_MTW
+    case NMEA0183_MTW: Error = NMEA0183_ProcessMTW(pStr, &pData->MTW); break;
+#endif
+#ifdef NMEA0183_DECODE_MWV
+    case NMEA0183_MWV: Error = NMEA0183_ProcessMWV(pStr, &pData->MWV); break;
+#endif
+#ifdef NMEA0183_DECODE_RMC
+    case NMEA0183_RMC: Error = NMEA0183_ProcessRMC(pStr, &pData->RMC); break;
+#endif
+#ifdef NMEA0183_DECODE_VHW
+    case NMEA0183_VHW: Error = NMEA0183_ProcessVHW(pStr, &pData->VHW); break;
+#endif
+#ifdef NMEA0183_DECODE_VTG
+    case NMEA0183_VTG: Error = NMEA0183_ProcessVTG(pStr, &pData->VTG); break;
+#endif
+#ifdef NMEA0183_DECODE_TXT
+    case NMEA0183_TXT: Error = NMEA0183_ProcessTXT(pStr, &pData->TXT); break;
+#endif
+#ifdef NMEA0183_DECODE_ZDA
+    case NMEA0183_ZDA: Error = NMEA0183_ProcessZDA(pStr, &pData->ZDA); break;
+#endif
+
+    default:
+      memcpy(&pData->Frame[0], pRaw, NMEA0183_FRAME_BUFFER_SIZE); // Copy the whole unknown frame for the user
+      pData->SentenceID = NMEA0183_UNKNOWN;                       // Sentence ID unknown by this library. User needs to parce externaly
+      Error = ERR__UNKNOWN_ELEMENT;
+  }
+  pData->ParseIsValid = (Error == ERR_OK);
+  return Error;
+}
+
+
+#ifdef NMEA0183_USE_INPUT_BUFFER
+//=============================================================================
+// Process the NMEA0183 frame (used with the decode structure)
 //=============================================================================
 eERRORRESULT NMEA0183_ProcessFrame(NMEA0183_DecodeInput* pDecoder, NMEA0183_DecodedData* pData)
 {
@@ -1311,109 +1417,56 @@ eERRORRESULT NMEA0183_ProcessFrame(NMEA0183_DecodeInput* pDecoder, NMEA0183_Deco
 #endif
   eERRORRESULT Error = ERR_OK;
   pData->ParseIsValid = false;
-  pDecoder->State = NMEA0183_WAIT_START; // Frame is Processed, wait for a new frame
+  pDecoder->State = NMEA0183_IN_PROCESS;                                  //Frame is in process
 
   //--- Frame control ---
-  if (pDecoder->RawFrame[0] != NMEA0183_START_DELIMITER) return ERR__BAD_FRAME_TYPE; // The frame shall start with '$'
-  char* pCRC = &pDecoder->CRC[0];
-  const uint8_t FrameCRC = (uint8_t)__NMEA0183_HexStringToUint(&pCRC, 2);            // Get frame CRC
-  if (FrameCRC != pDecoder->CurrCalcCRC) return ERR__CRC_ERROR;                      // The frame CRC shall correspond to the one calculated
-
-  //--- Select sentence ---
-  char* pRaw = &pDecoder->RawFrame[1];
-  pData->TalkerID   = (eNMEA0183_TalkerID)NMEA0183_TALKER_ID(pRaw[0], pRaw[1]);               // Extract talker ID
-  pData->SentenceID = (eNMEA0183_SentencesID)NMEA0183_SENTENCE_ID(pRaw[2], pRaw[3], pRaw[4]); // Extract sentence ID
-  pRaw += 5;                                                                                  // Skip Talker and Sentence IDs
-  if (*pRaw != NMEA0183_FIELD_DELIMITER) pData->SentenceID = NMEA0183_UNKNOWN;                // Sentence ID >3 chars so unknown by this library. User needs to parce externaly
-  while ((*pRaw != NMEA0183_FIELD_DELIMITER) && (*pRaw != 0)) ++pRaw;                         // Go to the end of the field or the end of the string
-  if (*pRaw != NMEA0183_FIELD_DELIMITER) return ERR__PARSE_ERROR; ++pRaw;                     // Check field delimiter
-
-  //--- Parse sentence ---
-  switch (pData->SentenceID)
+  if (pDecoder->RawFrame[0] != NMEA0183_START_DELIMITER)                  // The frame shall start with '$'
   {
-#ifdef NMEA0183_DECODE_AAM
-    case NMEA0183_AAM: Error = NMEA0183_ProcessAAM(pRaw, &pData->AAM); break;
-#endif
-#ifdef NMEA0183_DECODE_ALM
-    case NMEA0183_ALM: Error = NMEA0183_ProcessALM(pRaw, &pData->ALM); break;
-#endif
-#ifdef NMEA0183_DECODE_APB
-    case NMEA0183_APB: Error = NMEA0183_ProcessAPB(pRaw, &pData->APB); break;
-#endif
-#ifdef NMEA0183_DECODE_BEC
-    case NMEA0183_BEC: Error = NMEA0183_ProcessBEC(pRaw, &pData->BEC); break;
-#endif
-#ifdef NMEA0183_DECODE_BOD
-    case NMEA0183_BOD: Error = NMEA0183_ProcessBOD(pRaw, &pData->BOD); break;
-#endif
-#ifdef NMEA0183_DECODE_BWW
-    case NMEA0183_BWW: Error = NMEA0183_ProcessBWW(pRaw, &pData->BWW); break;
-#endif
-#ifdef NMEA0183_DECODE_DBK
-    case NMEA0183_DBK: Error = NMEA0183_ProcessDBx(pRaw, &pData->DBK); break;
-#endif
-#ifdef NMEA0183_DECODE_DBS
-    case NMEA0183_DBS: Error = NMEA0183_ProcessDBx(pRaw, &pData->DBS); break;
-#endif
-#ifdef NMEA0183_DECODE_DBT
-    case NMEA0183_DBT: Error = NMEA0183_ProcessDBx(pRaw, &pData->DBT); break;
-#endif
-#ifdef NMEA0183_DECODE_DPT
-    case NMEA0183_DPT: Error = NMEA0183_ProcessDPT(pRaw, &pData->DPT); break;
-#endif
-#ifdef NMEA0183_DECODE_FSI
-    case NMEA0183_FSI: Error = NMEA0183_ProcessFSI(pRaw, &pData->FSI); break;
-#endif
-#ifdef NMEA0183_DECODE_GGA
-    case NMEA0183_GGA: Error = NMEA0183_ProcessGGA(pRaw, &pData->GGA); break;
-#endif
-#ifdef NMEA0183_DECODE_GLL
-    case NMEA0183_GLL: Error = NMEA0183_ProcessGLL(pRaw, &pData->GLL); break;
-#endif
-#ifdef NMEA0183_DECODE_GSA
-    case NMEA0183_GSA: Error = NMEA0183_ProcessGSA(pRaw, &pData->GSA); break;
-#endif
-#ifdef NMEA0183_DECODE_GSV
-    case NMEA0183_GSV: Error = NMEA0183_ProcessGSV(pRaw, &pData->GSV); break;
-#endif
-#ifdef NMEA0183_DECODE_HDG
-    case NMEA0183_HDG: Error = NMEA0183_ProcessHDG(pRaw, &pData->HDG); break;
-#endif
-#ifdef NMEA0183_DECODE_HDM
-    case NMEA0183_HDM: Error = NMEA0183_ProcessHDM(pRaw, &pData->HDM); break;
-#endif
-#ifdef NMEA0183_DECODE_HDT
-    case NMEA0183_HDT: Error = NMEA0183_ProcessHDT(pRaw, &pData->HDT); break;
-#endif
-#ifdef NMEA0183_DECODE_MTW
-    case NMEA0183_MTW: Error = NMEA0183_ProcessMTW(pRaw, &pData->MTW); break;
-#endif
-#ifdef NMEA0183_DECODE_MWV
-    case NMEA0183_MWV: Error = NMEA0183_ProcessMWV(pRaw, &pData->MWV); break;
-#endif
-#ifdef NMEA0183_DECODE_RMC
-    case NMEA0183_RMC: Error = NMEA0183_ProcessRMC(pRaw, &pData->RMC); break;
-#endif
-#ifdef NMEA0183_DECODE_VHW
-    case NMEA0183_VHW: Error = NMEA0183_ProcessVHW(pRaw, &pData->VHW); break;
-#endif
-#ifdef NMEA0183_DECODE_VTG
-    case NMEA0183_VTG: Error = NMEA0183_ProcessVTG(pRaw, &pData->VTG); break;
-#endif
-#ifdef NMEA0183_DECODE_TXT
-    case NMEA0183_TXT: Error = NMEA0183_ProcessTXT(pRaw, &pData->TXT); break;
-#endif
-#ifdef NMEA0183_DECODE_ZDA
-    case NMEA0183_ZDA: Error = NMEA0183_ProcessZDA(pRaw, &pData->ZDA); break;
-#endif
-
-    default:
-      memcpy(&pData->Frame[0], &pDecoder->RawFrame[0], NMEA0183_FRAME_BUFFER_SIZE); // Copy the whole unknown frame for the user
-      pData->SentenceID = NMEA0183_UNKNOWN;                                         // Sentence ID unknown by this library. User needs to parce externaly
-      Error = ERR__UNKNOWN_ELEMENT;
+    pDecoder->State = NMEA0183_WAIT_START;                                // Frame is Processed, wait for a new frame
+    return ERR__BAD_FRAME_TYPE;
   }
-  pData->ParseIsValid = (Error == ERR_OK);
+  char* pCRC = &pDecoder->CRC[0];
+  const uint8_t FrameCRC = (uint8_t)__NMEA0183_HexStringToUint(&pCRC, 2); // Get frame CRC
+  if (FrameCRC != pDecoder->CurrCalcCRC)
+  {
+    pDecoder->State = NMEA0183_WAIT_START;                                // Frame is Processed, wait for a new frame
+    return ERR__CRC_ERROR;                                                // The frame CRC shall correspond to the one calculated
+  }
+
+  //--- Parse data ---
+  Error = __NMEA0183_DecodeSentence(&pDecoder->RawFrame[0], pData);       // Process string sentence
+  pDecoder->State = NMEA0183_WAIT_START;                                  // Frame is Processed, wait for a new frame
   return Error;
+}
+#endif
+//-----------------------------------------------------------------------------
+
+
+
+//=============================================================================
+// Process the NMEA0183 frame string line
+//=============================================================================
+eERRORRESULT NMEA0183_ProcessLine(const char* string, NMEA0183_DecodedData* pData)
+{
+#ifdef CHECK_NULL_PARAM
+  if ((pDecoder == NULL) || (pData == NULL)) return ERR__PARAMETER_ERROR;
+#endif
+  eERRORRESULT Error = ERR_OK;
+  pData->ParseIsValid = false;
+  char* pStr = (char*)string;
+
+  //--- Frame control ---
+  if (*pStr != NMEA0183_START_DELIMITER) return ERR__BAD_FRAME_TYPE;      // The frame shall start with '$'
+  ++pStr;                                                                 // Parsing: Skip the '$' (start delimiter)
+  uint8_t CurrCalcCRC = 0;
+  while ((*pStr != NMEA0183_CHECKSUM_DELIMITER) && (*pStr != '\0')) { CurrCalcCRC ^= *pStr; ++pStr; } // Calculate CRC of the frame
+  if (*pStr == '\0') return ERR__CRC_ERROR;                               // The frame shall contain a '*' (checksum delimiter)
+  ++pStr;                                                                 // Parsing: Skip the '*' (checksum delimiter)
+  const uint8_t FrameCRC = (uint8_t)__NMEA0183_HexStringToUint(&pStr, 2); // Get frame CRC
+  if (FrameCRC != CurrCalcCRC) return ERR__CRC_ERROR;                     // The frame CRC shall correspond to the one calculated
+
+  //--- Parse data ---
+  return __NMEA0183_DecodeSentence(string, pData);                        // Process string sentence
 }
 
 //-----------------------------------------------------------------------------
@@ -1576,6 +1629,36 @@ eERRORRESULT NMEA0183_DegreeMinuteSecondsToDegreeMinute(NMEA0183_DegreeMinuteSec
 //-----------------------------------------------------------------------------
 #ifdef __cplusplus
 }
+#endif
+
+
+
+
+
+//-----------------------------------------------------------------------------
+#ifdef __cplusplus
+//********************************************************************************************************************
+// NMEA0183 decoder Class
+//********************************************************************************************************************
+//=============================================================================
+// Process the NMEA0183 frame string line
+//=============================================================================
+eERRORRESULT NMEA0183decoder::ProcessLine(const char* string, NMEA0183_DecodedData* pData)
+{
+    eERRORRESULT Error = ERR__BAD_FRAME_TYPE;
+    pData->ParseIsValid = false;
+    //--- Fill Input Buffer structure ---
+    while (*string != '\0')
+    {
+        Error = AddReceivedCharacter(*string);
+        if (Error != ERR_OK) return Error;
+        ++string;
+    }
+    if (GetDecoderState() == NMEA0183_TO_PROCESS)
+         Error = ProcessFrame(pData);
+    else Error = ERR__BAD_FRAME_TYPE;
+    return Error;
+};
 #endif
 
 

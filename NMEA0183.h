@@ -869,6 +869,19 @@ bool NMEA0183_IsFrameReadyToProcess(NMEA0183_DecodeInput* pDecoder);
  * @return Returns an #eERRORRESULT value enum
  */
 eERRORRESULT NMEA0183_ProcessFrame(NMEA0183_DecodeInput* pDecoder, NMEA0183_DecodedData* pData);
+#endif
+//-----------------------------------------------------------------------------
+
+
+/*! @brief Process the NMEA0183 frame string line
+ *
+ * This function can be used alone without using the NMEA0183_DecodeInput structure
+ * This fucntion process a whole NMEA0183 line at once (from '$' to the char before the \r or \n terminal)
+ * @param[in] *pDecoder Is the frame string (with '\0' terminal) to process
+ * @param[out] *pData Is the decoded data
+ * @return Returns an #eERRORRESULT value enum
+ */
+eERRORRESULT NMEA0183_ProcessLine(const char* string, NMEA0183_DecodedData* pData);
 
 //********************************************************************************************************************
 

@@ -97,6 +97,18 @@ class NMEA0183decoder
      */
     eERRORRESULT ProcessFrame(NMEA0183_DecodedData* pData) { return NMEA0183_ProcessFrame(&InputData, pData); };
 
+    //-----------------------------------------------------------------------------
+
+    /*! @brief Process the NMEA0183 frame string line
+     *
+     * This function can be used alone without using the NMEA0183_DecodeInput structure
+     * This fucntion process a whole NMEA0183 line at once (from '$' to the char before the \r or \n terminal)
+     * @param[in] *pDecoder Is the frame string (with '\0' terminal) to process
+     * @param[out] *pData Is the decoded data
+     * @return Returns an #eERRORRESULT value enum
+     */
+    eERRORRESULT ProcessLine(const char* string, NMEA0183_DecodedData* pData);
+
 #ifdef NMEA0183_FLOAT_BASED_TOOLS
   public:
     /*! @brief Convert coordinate to degree (D.d)
