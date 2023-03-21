@@ -1,11 +1,10 @@
-/*******************************************************************************
+/*!*****************************************************************************
  * @file    NMEA0183.hpp
  * @author  Fabien 'Emandhal' MAILLY
  * @version 1.0.0
  * @date    13/02/2022
  * @brief   NMEA decoder library (C++ class wrapper header for C NMEA0183 library)
- *
- * Supports common GPS frames
+ * @details Supports common GPS frames
  ******************************************************************************/
 /* @page License
  *

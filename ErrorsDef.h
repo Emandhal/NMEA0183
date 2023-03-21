@@ -1,12 +1,12 @@
-/******************************************************************************
+/*!****************************************************************************
  * @file    ErrorsDef.h
  * @author  Fabien MAILLY
  * @version 1.0.0
  * @date    24/08/2020
  * @brief   Errors definitions
  *
- * These errors definitions are compatibles with all the libraries realized by
- * the author
+ * @details These errors definitions are compatibles with all the libraries
+ * realized by the author
  *****************************************************************************/
  /* @page License
  *
@@ -97,6 +97,11 @@ extern "C" {
     X(ERR__BUFFER_OVERRIDE     ,      , "Buffer data override"                                  ) \
     X(ERR__PARSE_ERROR         ,      , "Error while parsing data"                              ) \
     X(ERR__OLD_DATA            ,      , "Old data"                                              ) \
+    X(ERR__CANCELED            ,      , "Canceled"                                              ) \
+    X(ERR__NO_SYNC             ,      , "No synchronization"                                    ) \
+    X(ERR__NOT_INITIALIZED     ,      , "Not initialized"                                       ) \
+    X(ERR__BAD_ENDIANNESS      ,      , "Bad endianness"                                        ) \
+    X(ERR__INVALID_DATA        ,      , "Invalid data"                                          ) \
 /*  // Device mode                                                                              */\
     X(ERR__NOT_IN_SLEEP_MODE   , =  90, "Operation impossible in sleep mode"                    ) \
     X(ERR__ALREADY_IN_SLEEP    ,      , "Already in sleep mode"                                 ) \
