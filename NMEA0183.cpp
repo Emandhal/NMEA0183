@@ -37,7 +37,7 @@ static int32_t __NMEA0183_StringToInt(char** pStr, size_t max, size_t digits);
 //-----------------------------------------------------------------------------
 /*! @brief Hex string to value
  * This function will stop parsing at first char not in '0'..'9', 'a'..'f', 'A'..'F'
- *  @param[in/out] **pStr Is the string to parse (the original pointer will be advanced) and returns the new position in the string, the field separator ',' or the end of the string
+ * @param[in/out] **pStr Is the string to parse (the original pointer will be advanced) and returns the new position in the string, the field separator ',' or the end of the string
  * @param[in] max Is the max count of digit to extract. Set to 0 if no limit wanted. If >20 then it is the stop character
  * @return Returns the value extracted
  */
