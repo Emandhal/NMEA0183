@@ -90,7 +90,7 @@ namespace NMEA0183test
             eERRORRESULT LastError = ERR_OK;
 
             //=== Test (Full Data) ============================================
-            const char* const TEST_ZDA_FULL_DATA_FRAME = "$GPZDA,160012.71,11,03,2004,-1,00*7D\r\n";
+            const char* const TEST_ZDA_FULL_DATA_FRAME = "$GPZDA,160012.71,11,03,2004,3,00*52\r\n";
             for (size_t z = 0; z < strlen(TEST_ZDA_FULL_DATA_FRAME); ++z) (void)NMEA.AddReceivedCharacter(TEST_ZDA_FULL_DATA_FRAME[z]);
             CurrentState = NMEA.GetDecoderState();
             Assert::AreEqual(NMEA0183_TO_PROCESS, CurrentState, L"Test (Full Data), state should be NMEA0183_TO_PROCESS");
@@ -109,8 +109,54 @@ namespace NMEA0183test
             Assert::AreEqual((uint8_t)11u, FrameData.ZDA.Date.Day, L"Test (Full Data), Date.Day should be 11");
             Assert::AreEqual((uint8_t)03u, FrameData.ZDA.Date.Month, L"Test (Full Data), Date.Month should be 3");
             Assert::AreEqual((uint16_t)2004u, FrameData.ZDA.Date.Year, L"Test (Full Data), Date.Year should be 2004");
-            Assert::AreEqual((int8_t)-1, FrameData.ZDA.LocalZoneHour, L"Test (Full Data), LocalZoneHour should be -1");
-            Assert::AreEqual((uint8_t)00u, FrameData.ZDA.LocalZoneMinute, L"Test (Full Data), LocalZoneMinute should be 0");
+            Assert::AreEqual((int8_t)3, FrameData.ZDA.LocalZoneHour, L"Test (Full Data), LocalZoneHour should be 3");
+            Assert::AreEqual((int8_t)00, FrameData.ZDA.LocalZoneMinute, L"Test (Full Data), LocalZoneMinute should be 0");
+
+            //=== Test -10:00 ============================================
+            const char* const TEST_ZDA_MINUS10_DATA_FRAME = "$GPZDA,160012.71,11,03,2004,-10,00*4D\r\n";
+            for (size_t z = 0; z < strlen(TEST_ZDA_MINUS10_DATA_FRAME); ++z) (void)NMEA.AddReceivedCharacter(TEST_ZDA_MINUS10_DATA_FRAME[z]);
+            CurrentState = NMEA.GetDecoderState();
+            Assert::AreEqual(NMEA0183_TO_PROCESS, CurrentState, L"Test -10:00, state should be NMEA0183_TO_PROCESS");
+            LastError = NMEA.ProcessFrame(&FrameData);
+            Assert::AreEqual(ERR_OK, LastError, L"Test -10:00, error should be ERR_OK");
+            CurrentState = NMEA.GetDecoderState();
+            Assert::AreEqual(NMEA0183_WAIT_START, CurrentState, L"Test -10:00, state should be NMEA0183_WAIT_START");
+            //--- Test data ---
+            Assert::AreEqual(true, FrameData.ParseIsValid, L"Test -10:00, ParseIsValid should be true");
+            Assert::AreEqual(NMEA0183_GP, FrameData.TalkerID, L"Test -10:00, TalkerID should be NMEA0183_GP");
+            Assert::AreEqual(NMEA0183_ZDA, FrameData.SentenceID, L"Test -10:00, SentenceID should be NMEA0183_ZDA");
+            Assert::AreEqual((uint8_t)16u, FrameData.ZDA.Time.Hour, L"Test -10:00, Time.Hour should be 16");
+            Assert::AreEqual((uint8_t)00u, FrameData.ZDA.Time.Minute, L"Test -10:00, Time.Minute should be 0");
+            Assert::AreEqual((uint8_t)12u, FrameData.ZDA.Time.Second, L"Test -10:00, Time.Second should be 12");
+            Assert::AreEqual((uint16_t)710u, FrameData.ZDA.Time.MilliS, L"Test -10:00, Time.MilliS should be 710");
+            Assert::AreEqual((uint8_t)11u, FrameData.ZDA.Date.Day, L"Test -10:00, Date.Day should be 11");
+            Assert::AreEqual((uint8_t)03u, FrameData.ZDA.Date.Month, L"Test -10:00, Date.Month should be 3");
+            Assert::AreEqual((uint16_t)2004u, FrameData.ZDA.Date.Year, L"Test -10:00, Date.Year should be 2004");
+            Assert::AreEqual((int8_t)-10, FrameData.ZDA.LocalZoneHour, L"Test -10:00, LocalZoneHour should be -10");
+            Assert::AreEqual((int8_t)00, FrameData.ZDA.LocalZoneMinute, L"Test -10:00, LocalZoneMinute should be 0");
+
+            //=== Test -00:30 =====================================
+            const char* const TEST_ZDA_MINUS00_DATA_FRAME = "$GPZDA,160012.71,11,03,2004,-00,30*4F\r\n";
+            for (size_t z = 0; z < strlen(TEST_ZDA_MINUS00_DATA_FRAME); ++z) (void)NMEA.AddReceivedCharacter(TEST_ZDA_MINUS00_DATA_FRAME[z]);
+            CurrentState = NMEA.GetDecoderState();
+            Assert::AreEqual(NMEA0183_TO_PROCESS, CurrentState, L"Test -00:30, state should be NMEA0183_TO_PROCESS");
+            LastError = NMEA.ProcessFrame(&FrameData);
+            Assert::AreEqual(ERR_OK, LastError, L"Test -00:30, error should be ERR_OK");
+            CurrentState = NMEA.GetDecoderState();
+            Assert::AreEqual(NMEA0183_WAIT_START, CurrentState, L"Test -00:30, state should be NMEA0183_WAIT_START");
+            //--- Test data ---
+            Assert::AreEqual(true, FrameData.ParseIsValid, L"Test -00:30, ParseIsValid should be true");
+            Assert::AreEqual(NMEA0183_GP, FrameData.TalkerID, L"Test -00:30, TalkerID should be NMEA0183_GP");
+            Assert::AreEqual(NMEA0183_ZDA, FrameData.SentenceID, L"Test -00:30, SentenceID should be NMEA0183_ZDA");
+            Assert::AreEqual((uint8_t)16u, FrameData.ZDA.Time.Hour, L"Test -00:30, Time.Hour should be 16");
+            Assert::AreEqual((uint8_t)00u, FrameData.ZDA.Time.Minute, L"Test -00:30, Time.Minute should be 0");
+            Assert::AreEqual((uint8_t)12u, FrameData.ZDA.Time.Second, L"Test -00:30, Time.Second should be 12");
+            Assert::AreEqual((uint16_t)710u, FrameData.ZDA.Time.MilliS, L"Test -00:30, Time.MilliS should be 710");
+            Assert::AreEqual((uint8_t)11u, FrameData.ZDA.Date.Day, L"Test -00:30, Date.Day should be 11");
+            Assert::AreEqual((uint8_t)03u, FrameData.ZDA.Date.Month, L"Test -00:30, Date.Month should be 3");
+            Assert::AreEqual((uint16_t)2004u, FrameData.ZDA.Date.Year, L"Test -00:30, Date.Year should be 2004");
+            Assert::AreEqual((int8_t)0, FrameData.ZDA.LocalZoneHour, L"Test -00:30, LocalZoneHour should be 0");
+            Assert::AreEqual((int8_t)-30, FrameData.ZDA.LocalZoneMinute, L"Test -00:30, LocalZoneMinute should be -30");
         }
 #endif
     };

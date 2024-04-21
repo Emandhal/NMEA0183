@@ -1,8 +1,8 @@
 /*!*****************************************************************************
  * @file    NMEA0183.c
  * @author  Fabien 'Emandhal' MAILLY
- * @version 1.0.0
- * @date    13/02/2022
+ * @version 1.0.1
+ * @date    21/04/2024
  * @brief   NMEA decoder library
  * @details Supports common GPS frames
  ******************************************************************************/
@@ -1258,9 +1258,12 @@ static eERRORRESULT NMEA0183_ProcessZDA(const char* pSentence, NMEA0183_ZDAdata*
   NMEA0183_CHECK_FIELD_DELIMITER;
 
   //--- Get Local Zone Time ---
+  const bool IsNegativeLocalTime = (*pStr == '-');
   pData->LocalZoneHour   =  (int8_t)__NMEA0183_StringToInt(&pStr, 0, 0); //*** Get and save local zone hour <(-)hh>
   NMEA0183_CHECK_FIELD_DELIMITER;
   pData->LocalZoneMinute = (uint8_t)__NMEA0183_StringToInt(&pStr, 0, 0); //*** Get and save local zone minute <mm>
+  if (IsNegativeLocalTime && (pData->LocalZoneHour == 0))
+    pData->LocalZoneMinute = -pData->LocalZoneMinute;                    // Set LocalZoneMinute negative in case of -00 of LocalZoneHour
 
   if (*pStr != NMEA0183_CHECKSUM_DELIMITER) return ERR__PARSE_ERROR;     // Should be a '*'
   return ERR_OK;

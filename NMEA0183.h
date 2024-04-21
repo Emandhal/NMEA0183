@@ -1,8 +1,8 @@
 /*!*****************************************************************************
  * @file    NMEA0183.h
  * @author  Fabien 'Emandhal' MAILLY
- * @version 1.0.0
- * @date    13/02/2022
+ * @version 1.0.1
+ * @date    21/04/2024
  * @brief   NMEA decoder library
  * @details Supports common GPS frames
  ******************************************************************************/
@@ -29,7 +29,8 @@
  * DEALINGS IN THE SOFTWARE.
  *****************************************************************************/
 
-/* Revision history:s
+/* Revision history:
+ * 1.0.1    Correct ZDA decoding in case of -00:30 local time zone (Thanks to Yaumen)
  * 1.0.0    Release version
  *****************************************************************************/
 #ifndef NMEA0183_LIB_H_
@@ -686,10 +687,10 @@ typedef struct NMEA0183_VTGdata
  */
 typedef struct NMEA0183_ZDAdata
 {
-  NMEA0183_Time Time;      //!< Time extracted
-  NMEA0183_Date Date;      //!< Date extracted
-  int8_t LocalZoneHour;    //!< Local zone hours (00 to +/-13)
-  uint8_t LocalZoneMinute; //!< Local Zone Minutes (00 to 59)
+  NMEA0183_Time Time;     //!< Time extracted
+  NMEA0183_Date Date;     //!< Date extracted
+  int8_t LocalZoneHour;   //!< Local zone hours (00 to +/-13)
+  int8_t LocalZoneMinute; //!< Local Zone Minutes (00 to 59). Will be negative in case of -00 of LocalHour
 } NMEA0183_ZDAdata;
 
 //-----------------------------------------------------------------------------

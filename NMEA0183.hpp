@@ -1,8 +1,8 @@
 /*!*****************************************************************************
  * @file    NMEA0183.hpp
  * @author  Fabien 'Emandhal' MAILLY
- * @version 1.0.0
- * @date    13/02/2022
+ * @version 1.0.1
+ * @date    21/04/2024
  * @brief   NMEA decoder library (C++ class wrapper header for C NMEA0183 library)
  * @details Supports common GPS frames
  ******************************************************************************/
@@ -29,7 +29,8 @@
  * DEALINGS IN THE SOFTWARE.
  *****************************************************************************/
 
-/* Revision history:s
+/* Revision history:
+ * 1.0.1    Correct ZDA decoding in case of -00:30 local time zone (Thanks to Yaumen)
  * 1.0.0    Release version
  *****************************************************************************/
 #ifndef NMEA0183_LIB_HPP_
