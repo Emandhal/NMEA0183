@@ -1,8 +1,8 @@
 /*!*****************************************************************************
  * @file    NMEA0183.c
  * @author  Fabien 'Emandhal' MAILLY
- * @version 1.0.1
- * @date    21/04/2024
+ * @version 1.0.2
+ * @date    22/04/2024
  * @brief   NMEA decoder library
  * @details Supports common GPS frames
  ******************************************************************************/
@@ -1096,8 +1096,12 @@ static eERRORRESULT NMEA0183_ProcessRMC(const char* pSentence, NMEA0183_RMCdata*
   {
     //--- Get FAA mode (if available) ---
     ++pStr;                                                          // Parsing: Skip ','
-    pData->FAAmode = *pStr;                                          //*** Get FAA mode <A/D/E/M/S/N>
-    ++pStr;                                                          // Parsing: Skip <A/D/E/M/S/N>
+    if ((*pStr != NMEA0183_FIELD_DELIMITER) && (*pStr != NMEA0183_CHECKSUM_DELIMITER))
+    {
+      pData->FAAmode = *pStr;                                        //*** Get FAA mode <A/D/E/M/S/N>
+      ++pStr;                                                        // Parsing: Skip <A/D/E/M/S/N>
+    }
+    else pData->FAAmode = ' ';                                       //*** Set FAA mode not specified
     if (*pStr == NMEA0183_FIELD_DELIMITER)
     {
       //--- Get Navigation Status (if available) ---

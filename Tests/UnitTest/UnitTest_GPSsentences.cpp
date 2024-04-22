@@ -544,6 +544,108 @@ namespace NMEA0183test
             Assert::AreEqual('E', FrameData.RMC.Variation.Direction, L"Test (Full Data), Variation.Direction should be 'E'");
             Assert::AreEqual('A', FrameData.RMC.FAAmode, L"Test (Full Data), FAAmode should be 'A'");
             Assert::AreEqual('S', FrameData.RMC.NavigationStatus, L"Test (Full Data), NavigationStatus should be 'S'");
+
+            //=== Test (Old Frame 1) ==========================================
+            const char* const TEST_RMC_OLD_FRAME1_FRAME = "$GPRMC,125504.049,A,5542.2389,N,03741.6063,E,0.06,25.82,200906,,,*17\r\n";
+            for (size_t z = 0; z < strlen(TEST_RMC_OLD_FRAME1_FRAME); ++z) (void)NMEA.AddReceivedCharacter(TEST_RMC_OLD_FRAME1_FRAME[z]);
+            CurrentState = NMEA.GetDecoderState();
+            Assert::AreEqual(NMEA0183_TO_PROCESS, CurrentState, L"Test (Old Frame 1), state should be NMEA0183_TO_PROCESS");
+            LastError = NMEA.ProcessFrame(&FrameData);
+            Assert::AreEqual(ERR_OK, LastError, L"Test (Old Frame 1), error should be ERR_OK");
+            CurrentState = NMEA.GetDecoderState();
+            Assert::AreEqual(NMEA0183_WAIT_START, CurrentState, L"Test (Old Frame 1), state should be NMEA0183_WAIT_START");
+            //--- Test data ---
+            Assert::AreEqual(true, FrameData.ParseIsValid, L"Test (Old Frame 1), ParseIsValid should be true");
+            Assert::AreEqual(NMEA0183_GP, FrameData.TalkerID, L"Test (Old Frame 1), TalkerID should be NMEA0183_GP");
+            Assert::AreEqual(NMEA0183_RMC, FrameData.SentenceID, L"Test (Old Frame 1), SentenceID should be NMEA0183_RMC");
+            Assert::AreEqual((uint8_t)12, FrameData.RMC.Time.Hour, L"Test (Old Frame 1), Time.Hour should be 12");
+            Assert::AreEqual((uint8_t)55, FrameData.RMC.Time.Minute, L"Test (Old Frame 1), Time.Minute should be 55");
+            Assert::AreEqual((uint8_t)04, FrameData.RMC.Time.Second, L"Test (Old Frame 1), Time.Second should be 04");
+            Assert::AreEqual((uint16_t)49, FrameData.RMC.Time.MilliS, L"Test (Old Frame 1), Time.MilliS should be 49");
+            Assert::AreEqual('A', FrameData.RMC.Status, L"Test (Old Frame 1), Status should be 'A'");
+            Assert::AreEqual('N', FrameData.RMC.Latitude.Direction, L"Test (Old Frame 1), Latitude.Direction should be 'N'");
+            Assert::AreEqual((uint8_t)55, FrameData.RMC.Latitude.Degree, L"Test (Old Frame 1), Latitude.Degree should be 55");
+            Assert::AreEqual(422389000u, FrameData.RMC.Latitude.Minute, L"Test (Old Frame 1), Latitude.Minute should be 422389000");
+            Assert::AreEqual('E', FrameData.RMC.Longitude.Direction, L"Test (Old Frame 1), Longitude.Direction should be 'E'");
+            Assert::AreEqual((uint8_t)37, FrameData.RMC.Longitude.Degree, L"Test (Old Frame 1), Longitude.Degree should be 37");
+            Assert::AreEqual(416063000u, FrameData.RMC.Longitude.Minute, L"Test (Old Frame 1), Longitude.Minute should be 416063000");
+            Assert::AreEqual(600u, FrameData.RMC.Speed, L"Test (Old Frame 1), Speed should be 600");
+            Assert::AreEqual(258200u, FrameData.RMC.Track, L"Test (Old Frame 1), Track should be 258200");
+            Assert::AreEqual((uint8_t)20, FrameData.RMC.Date.Day, L"Test (Old Frame 1), Date.Day should be 20");
+            Assert::AreEqual((uint8_t)9, FrameData.RMC.Date.Month, L"Test (Old Frame 1), Date.Month should be 09");
+            Assert::AreEqual((uint16_t)6, FrameData.RMC.Date.Year, L"Test (Old Frame 1), Date.Year should be 06");
+            Assert::AreEqual((uint16_t)0xFFFF, FrameData.RMC.Variation.Value, L"Test (Old Frame 1), Variation.Value should be 0xFFFF");
+            Assert::AreEqual(' ', FrameData.RMC.Variation.Direction, L"Test (Old Frame 1), Variation.Direction should be ' '");
+            Assert::AreEqual(' ', FrameData.RMC.FAAmode, L"Test (Old Frame 1), FAAmode should be ' '");
+            Assert::AreEqual(' ', FrameData.RMC.NavigationStatus, L"Test (Old Frame 1), NavigationStatus should be ' '");
+
+            //=== Test (Old Frame 2) ============================================
+            const char* const TEST_RMC_OLD_FRAME2_FRAME = "$GPRMC,,V,,,,,,,080907,9.6,E,N*31\r\n";
+            for (size_t z = 0; z < strlen(TEST_RMC_OLD_FRAME2_FRAME); ++z) (void)NMEA.AddReceivedCharacter(TEST_RMC_OLD_FRAME2_FRAME[z]);
+            CurrentState = NMEA.GetDecoderState();
+            Assert::AreEqual(NMEA0183_TO_PROCESS, CurrentState, L"Test (Old Frame 2), state should be NMEA0183_TO_PROCESS");
+            LastError = NMEA.ProcessFrame(&FrameData);
+            Assert::AreEqual(ERR_OK, LastError, L"Test (Old Frame 2), error should be ERR_OK");
+            CurrentState = NMEA.GetDecoderState();
+            Assert::AreEqual(NMEA0183_WAIT_START, CurrentState, L"Test (Old Frame 2), state should be NMEA0183_WAIT_START");
+            //--- Test data ---
+            Assert::AreEqual(true, FrameData.ParseIsValid, L"Test (Old Frame 2), ParseIsValid should be true");
+            Assert::AreEqual(NMEA0183_GP, FrameData.TalkerID, L"Test (Old Frame 2), TalkerID should be NMEA0183_GP");
+            Assert::AreEqual(NMEA0183_RMC, FrameData.SentenceID, L"Test (Old Frame 2), SentenceID should be NMEA0183_RMC");
+            Assert::AreEqual((uint8_t)0xFF, FrameData.RMC.Time.Hour, L"Test (Old Frame 2), Time.Hour should be 0xFF");
+            Assert::AreEqual((uint8_t)0xFF, FrameData.RMC.Time.Minute, L"Test (Old Frame 2), Time.Minute should be 0xFF");
+            Assert::AreEqual((uint8_t)0xFF, FrameData.RMC.Time.Second, L"Test (Old Frame 2), Time.Second should be 0xFF");
+            Assert::AreEqual((uint16_t)0xFFFF, FrameData.RMC.Time.MilliS, L"Test (Old Frame 2), Time.MilliS should be 0xFFFF");
+            Assert::AreEqual('V', FrameData.RMC.Status, L"Test (Old Frame 2), Status should be 'V'");
+            Assert::AreEqual(' ', FrameData.RMC.Latitude.Direction, L"Test (Old Frame 2), Latitude.Direction should be ' '");
+            Assert::AreEqual((uint8_t)0xFF, FrameData.RMC.Latitude.Degree, L"Test (Old Frame 2), Latitude.Degree should be 0xFF");
+            Assert::AreEqual(0xFFFFFFFFu, FrameData.RMC.Latitude.Minute, L"Test (Old Frame 2), Latitude.Minute should be 0xFFFFFFFF");
+            Assert::AreEqual(' ', FrameData.RMC.Longitude.Direction, L"Test (Old Frame 2), Longitude.Direction should be ' '");
+            Assert::AreEqual((uint8_t)0xFF, FrameData.RMC.Longitude.Degree, L"Test (Old Frame 2), Longitude.Degree should be 0xFF");
+            Assert::AreEqual(0xFFFFFFFFu, FrameData.RMC.Longitude.Minute, L"Test (Old Frame 2), Longitude.Minute should be 0xFFFFFFFF");
+            Assert::AreEqual(0xFFFFFFFFu, FrameData.RMC.Speed, L"Test (Old Frame 2), Speed should be 0xFFFFFFFF");
+            Assert::AreEqual(0xFFFFFFFFu, FrameData.RMC.Track, L"Test (Old Frame 2), Track should be 0xFFFFFFFF");
+            Assert::AreEqual((uint8_t)8, FrameData.RMC.Date.Day, L"Test (Old Frame 2), Date.Day should be 8");
+            Assert::AreEqual((uint8_t)9, FrameData.RMC.Date.Month, L"Test (Old Frame 2), Date.Month should be 9");
+            Assert::AreEqual((uint16_t)7, FrameData.RMC.Date.Year, L"Test (Old Frame 2), Date.Year should be 7");
+            Assert::AreEqual((uint16_t)960, FrameData.RMC.Variation.Value, L"Test (Old Frame 2), Variation.Value should be 960");
+            Assert::AreEqual('E', FrameData.RMC.Variation.Direction, L"Test (Old Frame 2), Variation.Direction should be 'E'");
+            Assert::AreEqual('N', FrameData.RMC.FAAmode, L"Test (Old Frame 2), FAAmode should be 'N'");
+            Assert::AreEqual(' ', FrameData.RMC.NavigationStatus, L"Test (Old Frame 2), NavigationStatus should be ' '");
+
+            //=== Test (Old Frame 3) ============================================
+            const char* const TEST_RMC_OLD_FRAME3_FRAME = "$GNRMC,131807.00,A,5356.52249,N,02734.00205,E,,,180424,,,A,V*35\r\n";
+            for (size_t z = 0; z < strlen(TEST_RMC_OLD_FRAME3_FRAME); ++z) (void)NMEA.AddReceivedCharacter(TEST_RMC_OLD_FRAME3_FRAME[z]);
+            CurrentState = NMEA.GetDecoderState();
+            Assert::AreEqual(NMEA0183_TO_PROCESS, CurrentState, L"Test (Old Frame 3), state should be NMEA0183_TO_PROCESS");
+            LastError = NMEA.ProcessFrame(&FrameData);
+            Assert::AreEqual(ERR_OK, LastError, L"Test (Old Frame 3), error should be ERR_OK");
+            CurrentState = NMEA.GetDecoderState();
+            Assert::AreEqual(NMEA0183_WAIT_START, CurrentState, L"Test (Old Frame 3), state should be NMEA0183_WAIT_START");
+            //--- Test data ---
+            Assert::AreEqual(true, FrameData.ParseIsValid, L"Test (Old Frame 3), ParseIsValid should be true");
+            Assert::AreEqual(NMEA0183_GN, FrameData.TalkerID, L"Test (Old Frame 3), TalkerID should be NMEA0183_GN");
+            Assert::AreEqual(NMEA0183_RMC, FrameData.SentenceID, L"Test (Old Frame 3), SentenceID should be NMEA0183_RMC");
+            Assert::AreEqual((uint8_t)13, FrameData.RMC.Time.Hour, L"Test (Old Frame 3), Time.Hour should be 22");
+            Assert::AreEqual((uint8_t)18, FrameData.RMC.Time.Minute, L"Test (Old Frame 3), Time.Minute should be 54");
+            Assert::AreEqual((uint8_t)07, FrameData.RMC.Time.Second, L"Test (Old Frame 3), Time.Second should be 46");
+            Assert::AreEqual((uint16_t)0, FrameData.RMC.Time.MilliS, L"Test (Old Frame 3), Time.MilliS should be 0");
+            Assert::AreEqual('A', FrameData.RMC.Status, L"Test (Old Frame 3), Status should be 'A'");
+            Assert::AreEqual('N', FrameData.RMC.Latitude.Direction, L"Test (Old Frame 3), Latitude.Direction should be 'N'");
+            Assert::AreEqual((uint8_t)53, FrameData.RMC.Latitude.Degree, L"Test (Old Frame 3), Latitude.Degree should be 53");
+            Assert::AreEqual(565224900u, FrameData.RMC.Latitude.Minute, L"Test (Old Frame 3), Latitude.Minute should be 565224900");
+            Assert::AreEqual('E', FrameData.RMC.Longitude.Direction, L"Test (Old Frame 3), Longitude.Direction should be 'W'");
+            Assert::AreEqual((uint8_t)27, FrameData.RMC.Longitude.Degree, L"Test (Old Frame 3), Longitude.Degree should be 27");
+            Assert::AreEqual(340020500u, FrameData.RMC.Longitude.Minute, L"Test (Old Frame 3), Longitude.Minute should be 340020500");
+            Assert::AreEqual(0xFFFFFFFFu, FrameData.RMC.Speed, L"Test (Old Frame 3), Speed should be 0xFFFFFFFF");
+            Assert::AreEqual(0xFFFFFFFFu, FrameData.RMC.Track, L"Test (Old Frame 3), Track should be 0xFFFFFFFF");
+            Assert::AreEqual((uint8_t)18, FrameData.RMC.Date.Day, L"Test (Old Frame 3), Date.Day should be 18");
+            Assert::AreEqual((uint8_t)04, FrameData.RMC.Date.Month, L"Test (Old Frame 3), Date.Month should be 04");
+            Assert::AreEqual((uint16_t)24, FrameData.RMC.Date.Year, L"Test (Old Frame 3), Date.Year should be 24");
+            Assert::AreEqual((uint16_t)0xFFFF, FrameData.RMC.Variation.Value, L"Test (Old Frame 3), Variation.Value should be 0xFFFF");
+            Assert::AreEqual(' ', FrameData.RMC.Variation.Direction, L"Test (Old Frame 3), Variation.Direction should be ' '");
+            Assert::AreEqual('A', FrameData.RMC.FAAmode, L"Test (Old Frame 3), FAAmode should be 'A'");
+            Assert::AreEqual('V', FrameData.RMC.NavigationStatus, L"Test (Old Frame 3), NavigationStatus should be 'V'");
         }
 #endif
     };
